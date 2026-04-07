@@ -1,9 +1,9 @@
 function Footer() {
   return (
-    <footer className="footer" id="footer">
+    <footer className="footer" id="contact">
       <div className="container footer__grid">
         <div>
-          <a href="#hero" className="footer__brand">
+          <a href="#home" className="footer__brand">
             <span>TP</span>
             <div>
               <strong>TimeSheet Pro</strong>
@@ -25,7 +25,7 @@ function Footer() {
               <a href="#process">Quy trình</a>
             </li>
             <li>
-              <a href="#dashboard">Thống kê</a>
+              <a href="#preview">Xem trước</a>
             </li>
           </ul>
         </div>

@@ -7,15 +7,15 @@ import {
 } from 'react-icons/hi2';
 
 const statCards = [
-  { label: 'Nhân viên đang làm việc', value: '128', note: '+12 hôm nay', icon: HiMiniUserGroup },
-  { label: 'Số giờ hôm nay', value: '764h', note: 'Tăng 8.4%', icon: HiMiniClock },
-  { label: 'Yêu cầu nghỉ phép', value: '14', note: '5 chờ duyệt', icon: HiMiniCalendarDays },
-  { label: 'Tỉ lệ đúng giờ', value: '96%', note: 'Ổn định 30 ngày', icon: HiMiniCheckBadge },
+  { label: 'Nhân viên đang làm việc ', value: '128', note: '+12 hôm nay', icon: HiMiniUserGroup },
+  { label: 'Số giờ hôm nay ', value: '764h', note: 'Tăng 8.4%', icon: HiMiniClock },
+  { label: 'Yêu cầu nghỉ phép ', value: '14', note: '5 chờ duyệt', icon: HiMiniCalendarDays },
+  { label: 'Tỷ lệ đúng giờ ', value: '96%', note: 'ổn định 30 ngày', icon: HiMiniCheckBadge },
 ];
 
 function Hero() {
   return (
-    <section className="hero section" id="hero">
+    <section className="hero section" id="home">
       <div className="container hero__grid">
         {/* Left side introduces the product value clearly */}
         <div className="hero__content reveal">
@@ -23,9 +23,9 @@ function Hero() {
           <h1>Hệ thống quản lý chấm công và timesheet thông minh cho doanh nghiệp</h1>
 
           <div className="hero__actions">
-            <button type="button" className="button button--primary button--large">
-              Bắt đầu ngay
-            </button>
+            <a href="#preview" className="button button--secondary button--large">
+              Xem trước
+            </a>
           </div>
 
           <div className="hero__trust">

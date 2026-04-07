@@ -1,4 +1,4 @@
-import Navbar from '../components/Navbar';
+﻿import HomeNavbar from '../components/HomeNavbar';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
 import Process from '../components/Process';
@@ -9,12 +9,12 @@ import Footer from '../components/Footer';
 
 function HomePage() {
   return (
-    <div className="app-shell">
+    <div className="app-shell home-page" id="home">
       {/* Decorative background glow for a polished landing page look */}
       <div className="page-glow page-glow-left" />
       <div className="page-glow page-glow-right" />
-      <Navbar />
-      <main>
+      <HomeNavbar />
+      <main className="home-page__main">
         <Hero />
         <Features />
         <Process />

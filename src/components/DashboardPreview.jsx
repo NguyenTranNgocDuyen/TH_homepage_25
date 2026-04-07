@@ -1,3 +1,10 @@
+const dashboardStats = [
+  { label: 'Tổng nhân sự', value: '186', note: '+4 so với tháng trước' },
+  { label: 'Check-in hôm nay', value: '173', note: '93% hoàn thành' },
+  { label: 'Đơn chờ duyệt', value: '21', note: '7 nghỉ phép, 14 chỉnh công' },
+  { label: 'Hiệu suất trung bình', value: '89%', note: 'Ổn định trong 4 tuần' },
+];
+
 const attendanceRows = [
   { name: 'Nguyễn Trần Ngọc Duyên', department: 'Kỹ thuật', checkIn: '08:03', status: 'Đúng giờ' },
   { name: 'Võ Hà Như Thủy', department: 'Kinh doanh', checkIn: '08:10', status: 'Đi muộn' },
@@ -5,19 +12,34 @@ const attendanceRows = [
   { name: 'Nguyễn B', department: 'Nhân sự', checkIn: '08:01', status: 'Đúng giờ' },
 ];
 
+const taskStatuses = [
+  { label: 'Hoàn thành', value: '72%' },
+  { label: 'Đang xử lý', value: '18%' },
+  { label: 'Quá hạn', value: '10%' },
+];
+
 const barHeights = ['72%', '88%', '61%', '95%', '79%', '68%', '91%'];
 
 function DashboardPreview() {
+  const previewMenuItems = [
+    { label: 'Dashboard', active: true },
+    { label: 'Nhân sự' },
+    { label: 'Timesheet' },
+    { label: 'Xin nghỉ phép' },
+    { label: 'Báo cáo' },
+    { label: 'Cài đặt' },
+  ];
+
   return (
-    <section className="section" id="dashboard">
+    <section className="section" id="preview">
       <div className="container dashboard-section">
         <div className="section-heading reveal">
           <span className="section-badge">Dashboard Preview</span>
+          <h2>Góc nhìn nhanh về không gian quản trị của TimeSheet Pro</h2>
         </div>
 
-        <div className="dashboard-mockup reveal reveal--delay">
-          {/* Sidebar mimics navigation inside an admin dashboard */}
-          <aside className="dashboard-mockup__sidebar">
+        <div className="dashboard-mockup dashboard-mockup--preview reveal reveal--delay" aria-label="Dashboard preview">
+          <aside className="dashboard-mockup__sidebar" aria-hidden="true">
             <div className="dashboard-brand">
               <span>TP</span>
               <div>
@@ -26,16 +48,17 @@ function DashboardPreview() {
               </div>
             </div>
 
-            <nav className="dashboard-nav">
-              <a href="#dashboard" className="active">
-                Dashboard
-              </a>
-              <a href="#features">Nhân sự</a>
-              <a href="#features">Timesheet</a>
-              <a href="#process">Xin nghỉ phép</a>
-              <a href="#footer">Báo cáo</a>
-              <a href="#footer">Cài đặt</a>
-            </nav>
+            <div className="dashboard-preview-note">
+              <span className="status-badge status-badge--neutral">Static Preview</span>
+            </div>
+
+            <div className="dashboard-nav" role="presentation">
+              {previewMenuItems.map(({ label, active }) => (
+                <div key={label} className={`dashboard-nav__item${active ? ' active' : ''}`}>
+                  {label}
+                </div>
+              ))}
+            </div>
 
             <div className="sidebar-card">
               <span>Tuần này</span>
@@ -44,17 +67,17 @@ function DashboardPreview() {
             </div>
           </aside>
 
-          <div className="dashboard-mockup__main">
-            {/* Main workspace shows KPIs, table data and chart preview */}
+          <div className="dashboard-mockup__main" aria-hidden="true">
             <div className="dashboard-topbar">
               <div>
                 <span className="dashboard-topbar__tag">Overview</span>
                 <h3>Bảng điều khiển chấm công doanh nghiệp</h3>
               </div>
               <div className="dashboard-topbar__actions">
-                <button type="button" className="button button--secondary">
-                  Xuất báo cáo
-                </button>
+                <div className="dashboard-display-chip">
+                  <span className="dashboard-display-chip__dot" />
+                  Preview only
+                </div>
                 <div className="user-pill">
                   <span>AD</span>
                   <strong>Admin HR</strong>
@@ -63,26 +86,13 @@ function DashboardPreview() {
             </div>
 
             <div className="dashboard-stats">
-              <article className="dashboard-stat">
-                <span>Tổng nhân sự</span>
-                <strong>186</strong>
-                <small>+4 so với tháng trước</small>
-              </article>
-              <article className="dashboard-stat">
-                <span>Check-in hôm nay</span>
-                <strong>173</strong>
-                <small>93% hoàn thành</small>
-              </article>
-              <article className="dashboard-stat">
-                <span>Đơn chờ duyệt</span>
-                <strong>21</strong>
-                <small>7 nghỉ phép, 14 chỉnh công</small>
-              </article>
-              <article className="dashboard-stat">
-                <span>Hiệu suất trung bình</span>
-                <strong>89%</strong>
-                <small>Ổn định trong 4 tuần</small>
-              </article>
+              {dashboardStats.map(({ label, value, note }) => (
+                <article className="dashboard-stat" key={label}>
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                  <small>{note}</small>
+                </article>
+              ))}
             </div>
 
             <div className="dashboard-content-grid">
@@ -90,9 +100,9 @@ function DashboardPreview() {
                 <div className="panel-heading">
                   <div>
                     <h4>Bảng chấm công hôm nay</h4>
-                    <p>Cập nhật theo thời gian thực theo phòng ban</p>
+                    <p>Dữ liệu mẫu minh họa theo phòng ban</p>
                   </div>
-                  <span className="status-badge status-badge--success">Live</span>
+                  <span className="status-badge status-badge--soft">Sample data</span>
                 </div>
 
                 <div className="attendance-table">
@@ -107,10 +117,7 @@ function DashboardPreview() {
                       <span>{row.name}</span>
                       <span>{row.department}</span>
                       <span>{row.checkIn}</span>
-                      <span
-                        className={`status-badge ${row.status === 'Đi muộn' ? 'status-badge--warning' : 'status-badge--success'
-                          }`}
-                      >
+                      <span className={`status-badge ${row.status === 'Đi muộn' ? 'status-badge--warning' : 'status-badge--success'}`}>
                         {row.status}
                       </span>
                     </div>
@@ -123,22 +130,16 @@ function DashboardPreview() {
                   <div className="panel-heading">
                     <div>
                       <h4>Tiến độ công việc</h4>
-                      <p>Theo nhóm trong tuần</p>
+                      <p>Phân bổ trạng thái theo tuần</p>
                     </div>
                   </div>
                   <div className="task-status-list">
-                    <div className="task-status-item">
-                      <span>Hoàn thành</span>
-                      <strong>72%</strong>
-                    </div>
-                    <div className="task-status-item">
-                      <span>Đang xử lý</span>
-                      <strong>18%</strong>
-                    </div>
-                    <div className="task-status-item">
-                      <span>Quá hạn</span>
-                      <strong>10%</strong>
-                    </div>
+                    {taskStatuses.map(({ label, value }) => (
+                      <div className="task-status-item" key={label}>
+                        <span>{label}</span>
+                        <strong>{value}</strong>
+                      </div>
+                    ))}
                   </div>
                 </article>
 
@@ -151,7 +152,7 @@ function DashboardPreview() {
                   </div>
                   <div className="bar-chart">
                     {barHeights.map((height, index) => (
-                      <div className="bar-chart__item" key={height}>
+                      <div className="bar-chart__item" key={`${height}-${index}`}>
                         <div className="bar-chart__bar" style={{ height }} />
                         <span>T{index + 2}</span>
                       </div>
