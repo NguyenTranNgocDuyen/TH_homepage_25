@@ -27,14 +27,14 @@ function DashboardPreview() {
             </div>
 
             <nav className="dashboard-nav">
-              <a href="#dashboard" className="active">
+              <a className="active" style={{ cursor: 'default' }}>
                 Dashboard
               </a>
-              <a href="#features">Nhân sự</a>
-              <a href="#features">Timesheet</a>
-              <a href="#process">Xin nghỉ phép</a>
-              <a href="#footer">Báo cáo</a>
-              <a href="#footer">Cài đặt</a>
+              <a style={{ cursor: 'default' }}>Nhân sự</a>
+              <a style={{ cursor: 'default' }}>Timesheet</a>
+              <a style={{ cursor: 'default' }}>Xin nghỉ phép</a>
+              <a style={{ cursor: 'default' }}>Báo cáo</a>
+              <a style={{ cursor: 'default' }}>Cài đặt</a>
             </nav>
 
             <div className="sidebar-card">

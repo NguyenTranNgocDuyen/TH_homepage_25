@@ -1,24 +1,23 @@
-function Navbar() {
-  const navItems = ['Trang chủ', 'Tính năng', 'Quy trình', 'Thống kê', 'Liên hệ'];
-  const sectionIds = ['hero', 'features', 'process', 'dashboard', 'footer'];
+import { Link } from 'react-router-dom';
 
+function Navbar() {
   return (
     <header className="navbar">
       <div className="container navbar__inner">
-        <a href="#hero" className="navbar__brand">
+        <Link to="/" className="navbar__brand">
           <span className="navbar__brand-mark">TP</span>
           <div>
             <strong>TimeSheet Pro</strong>
             <span>Smart Time Tracking</span>
           </div>
-        </a>
+        </Link>
 
         <nav className="navbar__menu">
-          {navItems.map((item, index) => (
-            <a key={item} href={`#${sectionIds[index]}`} className="navbar__link">
-              {item}
-            </a>
-          ))}
+          <Link to="/" className="navbar__link">Trang chủ</Link>
+          <Link to="/about-us" className="navbar__link">Giới thiệu</Link>
+          <a href="/#features" className="navbar__link">Tính năng</a>
+          <a href="/#process" className="navbar__link">Quy trình</a>
+          <a href="#footer" className="navbar__link">Liên hệ</a>
         </nav>
 
         <div className="navbar__actions">

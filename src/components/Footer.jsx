@@ -1,31 +1,33 @@
+import { Link } from 'react-router-dom';
+
 function Footer() {
   return (
     <footer className="footer" id="footer">
       <div className="container footer__grid">
         <div>
-          <a href="#hero" className="footer__brand">
+          <Link to="/" className="footer__brand">
             <span>TP</span>
             <div>
               <strong>TimeSheet Pro</strong>
               <p>Giải pháp giao diện chấm công và quản lý timesheet hiện đại cho doanh nghiệp.</p>
             </div>
-          </a>
+          </Link>
         </div>
 
         <div>
           <h4>Liên kết nhanh</h4>
           <ul className="footer__list">
             <li>
-              <a href="#hero">Trang chủ</a>
+              <Link to="/">Trang chủ</Link>
             </li>
             <li>
-              <a href="#features">Tính năng</a>
+              <a href="/#features">Tính năng</a>
             </li>
             <li>
-              <a href="#process">Quy trình</a>
+              <a href="/#process">Quy trình</a>
             </li>
             <li>
-              <a href="#dashboard">Thống kê</a>
+              <a href="/#dashboard">Thống kê</a>
             </li>
           </ul>
         </div>
@@ -42,7 +44,6 @@ function Footer() {
 
       <div className="container footer__bottom">
         <span>© 2026 TimeSheet Pro. All rights reserved.</span>
-        <span>Designed for final project presentation.</span>
       </div>
     </footer>
   );

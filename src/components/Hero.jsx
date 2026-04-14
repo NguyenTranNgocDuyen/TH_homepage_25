@@ -45,11 +45,7 @@ function Hero() {
                 <span className="hero-dashboard__label">Live Dashboard</span>
                 <h3>Operational Overview</h3>
               </div>
-              <div className="hero-dashboard__pill">
-                <HiMiniArrowTrendingUp />
-                <span>+18.2%</span>
               </div>
-            </div>
 
             <div className="hero-dashboard__stats">
               {statCards.map(({ icon: Icon, label, value, note }) => (
