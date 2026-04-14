@@ -15,9 +15,9 @@ function Navbar() {
         <nav className="navbar__menu">
           <Link to="/" className="navbar__link">Trang chủ</Link>
           <Link to="/about-us" className="navbar__link">Giới thiệu</Link>
-          <a href="/#features" className="navbar__link">Tính năng</a>
-          <a href="/#process" className="navbar__link">Quy trình</a>
-          <a href="#footer" className="navbar__link">Liên hệ</a>
+          <Link to="/#features" className="navbar__link">Tính năng</Link>
+          <Link to="/#process" className="navbar__link">Quy trình</Link>
+          <Link to="#footer" className="navbar__link">Liên hệ</Link>
         </nav>
 
         <div className="navbar__actions">

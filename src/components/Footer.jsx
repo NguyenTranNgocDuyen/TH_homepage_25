@@ -21,13 +21,16 @@ function Footer() {
               <Link to="/">Trang chủ</Link>
             </li>
             <li>
-              <a href="/#features">Tính năng</a>
+              <Link to="/about-us">Giới thiệu</Link>
             </li>
             <li>
-              <a href="/#process">Quy trình</a>
+              <Link to="/#features">Tính năng</Link>
             </li>
             <li>
-              <a href="/#dashboard">Thống kê</a>
+              <Link to="/#process">Quy trình</Link>
+            </li>
+            <li>
+              <Link to="/#dashboard">Thống kê</Link>
             </li>
           </ul>
         </div>
