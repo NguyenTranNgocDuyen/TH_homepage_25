@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TimesheetLeaveApi.Migrations
+namespace TimesheetApi.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -21,17 +21,17 @@ namespace TimesheetLeaveApi.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    EmployeeName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                    EmployeeName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    LeaveType = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                    LeaveType = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    StartDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    Reason = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
+                    StartDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Reason = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Status = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
+                    Status = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,24 +40,24 @@ namespace TimesheetLeaveApi.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "TimesheetEntries",
+                name: "Timesheets",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    EmployeeName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                    EmployeeName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    WorkDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    CheckInTime = table.Column<DateTime>(type: "datetime", nullable: true),
-                    CheckOutTime = table.Column<DateTime>(type: "datetime", nullable: true),
-                    Status = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
+                    WorkDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CheckInTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CheckOutTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Status = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Note = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                    Note = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TimesheetEntries", x => x.Id);
+                    table.PrimaryKey("PK_Timesheets", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
         }
@@ -69,7 +69,7 @@ namespace TimesheetLeaveApi.Migrations
                 name: "LeaveRequests");
 
             migrationBuilder.DropTable(
-                name: "TimesheetEntries");
+                name: "Timesheets");
         }
     }
 }

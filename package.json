@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "app": "npm run build && dotnet run --project backend/TimesheetLeaveApi.csproj --no-launch-profile",
+    "dev:web": "vite",
+    "dev:api": "dotnet run --project backend/TimesheetApi.csproj",
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
+    "app": "npm run build && dotnet run --project backend/TimesheetApi.csproj --no-launch-profile",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
     "vite": "^5.4.10"
   }
 }

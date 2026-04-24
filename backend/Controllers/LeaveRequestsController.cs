@@ -1,159 +1,100 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TimesheetLeaveApi.Data;
-using TimesheetLeaveApi.Models;
+using TimesheetApi.Data;
+using TimesheetApi.Models;
 
-namespace TimesheetLeaveApi.Controllers;
+namespace TimesheetApi.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-public class LeaveRequestsController(AppDbContext context) : ControllerBase
+[ApiController]
+public class LeaveRequestsController : ControllerBase
 {
-    private static readonly string[] AllowedLeaveTypes = ["Annual Leave", "Sick Leave", "Unpaid Leave"];
-    private static readonly string[] AllowedStatuses = ["Pending", "Approved", "Rejected"];
+    private readonly TimesheetDbContext _context;
 
+    public LeaveRequestsController(TimesheetDbContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/LeaveRequests
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LeaveRequest>>> GetLeaveRequests()
     {
-        var leaveRequests = await context.LeaveRequests
-            .AsNoTracking()
-            .OrderByDescending(item => item.CreatedAt)
-            .ThenBy(item => item.EmployeeName)
-            .ToListAsync();
-
-        return Ok(leaveRequests);
+        return await _context.LeaveRequests.ToListAsync();
     }
 
-    [HttpGet("{id:int}")]
+    // GET: api/LeaveRequests/5
+    [HttpGet("{id}")]
     public async Task<ActionResult<LeaveRequest>> GetLeaveRequest(int id)
     {
-        var leaveRequest = await context.LeaveRequests
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var leaveRequest = await _context.LeaveRequests.FindAsync(id);
 
-        if (leaveRequest is null)
+        if (leaveRequest == null)
         {
-            return NotFound(new { message = "Leave request not found." });
+            return NotFound();
         }
 
-        return Ok(leaveRequest);
+        return leaveRequest;
     }
 
+    // POST: api/LeaveRequests
     [HttpPost]
-    public async Task<ActionResult<LeaveRequest>> CreateLeaveRequest(LeaveRequest request)
+    public async Task<ActionResult<LeaveRequest>> PostLeaveRequest(LeaveRequest leaveRequest)
     {
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
+        _context.LeaveRequests.Add(leaveRequest);
+        await _context.SaveChangesAsync();
 
-        var validationProblem = ValidateLeaveRequest(request);
-        if (validationProblem is not null)
-        {
-            return ValidationProblem(validationProblem);
-        }
-
-        request.Id = 0;
-        request.EmployeeName = request.EmployeeName.Trim();
-        request.LeaveType = request.LeaveType.Trim();
-        request.Reason = request.Reason.Trim();
-        request.Status = request.Status.Trim();
-        request.CreatedAt = DateTime.UtcNow;
-
-        context.LeaveRequests.Add(request);
-        await context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetLeaveRequest), new { id = request.Id }, request);
+        return CreatedAtAction(nameof(GetLeaveRequest), new { id = leaveRequest.Id }, leaveRequest);
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateLeaveRequest(int id, LeaveRequest request)
+    // PUT: api/LeaveRequests/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutLeaveRequest(int id, LeaveRequest leaveRequest)
     {
-        if (!ModelState.IsValid)
+        if (id != leaveRequest.Id)
         {
-            return ValidationProblem(ModelState);
+            return BadRequest();
         }
 
-        var validationProblem = ValidateLeaveRequest(request);
-        if (validationProblem is not null)
+        _context.Entry(leaveRequest).State = EntityState.Modified;
+
+        try
         {
-            return ValidationProblem(validationProblem);
+            await _context.SaveChangesAsync();
         }
-
-        var existingRequest = await context.LeaveRequests.FindAsync(id);
-        if (existingRequest is null)
+        catch (DbUpdateConcurrencyException)
         {
-            return NotFound(new { message = "Leave request not found." });
+            if (!LeaveRequestExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
         }
-
-        existingRequest.EmployeeName = request.EmployeeName.Trim();
-        existingRequest.LeaveType = request.LeaveType.Trim();
-        existingRequest.StartDate = request.StartDate;
-        existingRequest.EndDate = request.EndDate;
-        existingRequest.Reason = request.Reason.Trim();
-        existingRequest.Status = request.Status.Trim();
-        // Keep original creation time for easy demo tracking.
-        existingRequest.CreatedAt = existingRequest.CreatedAt == default ? DateTime.UtcNow : existingRequest.CreatedAt;
-
-        await context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    // DELETE: api/LeaveRequests/5
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteLeaveRequest(int id)
     {
-        var existingRequest = await context.LeaveRequests.FindAsync(id);
-        if (existingRequest is null)
+        var leaveRequest = await _context.LeaveRequests.FindAsync(id);
+        if (leaveRequest == null)
         {
-            return NotFound(new { message = "Leave request not found." });
+            return NotFound();
         }
 
-        context.LeaveRequests.Remove(existingRequest);
-        await context.SaveChangesAsync();
+        _context.LeaveRequests.Remove(leaveRequest);
+        await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    private static ValidationProblemDetails? ValidateLeaveRequest(LeaveRequest request)
+    private bool LeaveRequestExists(int id)
     {
-        var errors = new Dictionary<string, string[]>();
-
-        if (string.IsNullOrWhiteSpace(request.EmployeeName))
-        {
-            errors.Add(nameof(request.EmployeeName), ["Employee name is required."]);
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Reason))
-        {
-            errors.Add(nameof(request.Reason), ["Reason is required."]);
-        }
-
-        if (request.StartDate == default)
-        {
-            errors.Add(nameof(request.StartDate), ["Start date is required."]);
-        }
-
-        if (request.EndDate == default)
-        {
-            errors.Add(nameof(request.EndDate), ["End date is required."]);
-        }
-
-        if (request.StartDate != default && request.EndDate != default && request.EndDate < request.StartDate)
-        {
-            errors.Add(nameof(request.EndDate), ["End date must be later than or equal to start date."]);
-        }
-
-        if (string.IsNullOrWhiteSpace(request.LeaveType) || !AllowedLeaveTypes.Contains(request.LeaveType.Trim()))
-        {
-            errors.Add(nameof(request.LeaveType), ["Leave type must be Annual Leave, Sick Leave or Unpaid Leave."]);
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Status) || !AllowedStatuses.Contains(request.Status.Trim()))
-        {
-            errors.Add(nameof(request.Status), ["Status must be Pending, Approved or Rejected."]);
-        }
-
-        return errors.Count == 0 ? null : new ValidationProblemDetails(errors);
+        return _context.LeaveRequests.Any(e => e.Id == id);
     }
 }

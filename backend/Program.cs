@@ -1,79 +1,44 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
-using TimesheetLeaveApi.Data;
+using TimesheetApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "http://localhost:5042");
+// Add services to the container.
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Add DbContext
+builder.Services.AddDbContext<TimesheetDbContext>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ??
-                     new[] { "http://localhost:5173" };
-
+// Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ViteClient", policy =>
-    {
-        policy.WithOrigins(allowedOrigins)
-            .WithMethods("GET", "POST", "PUT", "DELETE")
-            .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
 });
 
+builder.Services.AddControllers();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
 var app = builder.Build();
-var spaDistPath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "dist"));
-var hasSpaDist = Directory.Exists(spaDistPath);
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.UseCors("ViteClient");
-
-if (hasSpaDist)
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    var spaFileProvider = new PhysicalFileProvider(spaDistPath);
-
-    app.UseDefaultFiles(new DefaultFilesOptions
-    {
-        FileProvider = spaFileProvider
-    });
-
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = spaFileProvider
-    });
+    app.MapOpenApi();
 }
+
+app.UseHttpsRedirection();
+
+app.UseCors("AllowAllOrigins"); // Use CORS
+
+app.UseAuthorization();
 
 app.MapControllers();
-
-if (hasSpaDist)
-{
-    app.MapWhen(
-        context => !context.Request.Path.StartsWithSegments("/api") &&
-                   !context.Request.Path.StartsWithSegments("/swagger") &&
-                   !Path.HasExtension(context.Request.Path.Value),
-        spaApp =>
-        {
-            spaApp.Run(async context =>
-            {
-                context.Response.ContentType = "text/html; charset=utf-8";
-                await context.Response.SendFileAsync(Path.Combine(spaDistPath, "index.html"));
-            });
-        });
-}
-else
-{
-    app.MapGet("/", () => Results.Text(
-        "Frontend build not found. Run `npm run app` from the project root first.",
-        "text/plain"));
-}
 
 app.Run();
