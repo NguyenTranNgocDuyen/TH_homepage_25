@@ -1,9 +1,23 @@
-﻿function formatDate(value) {
+function formatDate(value) {
   if (!value) {
     return '--';
   }
 
   return new Date(value).toLocaleDateString('vi-VN');
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return '--';
+  }
+
+  return new Date(value).toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 }
 
 function getStatusClass(status) {
@@ -47,7 +61,7 @@ function LeaveRequestList({ items, isLoading, editingId, deletingId, onEdit, onD
               <div className="management-meta">
                 <span>Từ: {formatDate(item.startDate)}</span>
                 <span>Đến: {formatDate(item.endDate)}</span>
-                <span>Tạo lúc: {formatDate(item.createdAt)}</span>
+                <span>Tạo lúc: {formatDateTime(item.createdAt)}</span>
               </div>
 
               <p className="management-note">{item.reason}</p>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const timesheetStatuses = ['Present', 'Late', 'Absent', 'EarlyLeave'];
 
@@ -42,11 +42,18 @@ function mapTimesheetToFormState(initialData) {
   };
 }
 
+function formatName(name) {
+  if (!name) return '';
+  return name.trim().split(' ').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+}
+
 function buildTimesheetPayload(formState) {
   const workDate = formState.workDate;
 
   return {
-    employeeName: formState.employeeName.trim(),
+    employeeName: formatName(formState.employeeName),
     workDate: `${workDate}T00:00:00`,
     checkInTime: formState.checkInTime ? `${workDate}T${formState.checkInTime}:00` : null,
     checkOutTime: formState.checkOutTime ? `${workDate}T${formState.checkOutTime}:00` : null,
@@ -74,7 +81,11 @@ function TimesheetForm({ initialData, onSubmit, onCancel, isSubmitting }) {
   async function handleSubmit(event) {
     event.preventDefault();
     try {
-      await onSubmit(buildTimesheetPayload(formState));
+      const payload = buildTimesheetPayload(formState);
+      if (isEditing) {
+        payload.id = initialData.id;
+      }
+      await onSubmit(payload);
 
       if (!isEditing) {
         setFormState(createEmptyFormState());

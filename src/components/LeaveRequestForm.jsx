@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const leaveTypes = ['Annual Leave', 'Sick Leave', 'Unpaid Leave'];
 const leaveStatuses = ['Pending', 'Approved', 'Rejected'];
@@ -41,9 +41,16 @@ function mapLeaveRequestToFormState(initialData) {
   };
 }
 
+function formatName(name) {
+  if (!name) return '';
+  return name.trim().split(' ').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+}
+
 function buildLeaveRequestPayload(formState) {
   return {
-    employeeName: formState.employeeName.trim(),
+    employeeName: formatName(formState.employeeName),
     leaveType: formState.leaveType,
     startDate: `${formState.startDate}T00:00:00`,
     endDate: `${formState.endDate}T00:00:00`,
@@ -71,7 +78,11 @@ function LeaveRequestForm({ initialData, onSubmit, onCancel, isSubmitting }) {
   async function handleSubmit(event) {
     event.preventDefault();
     try {
-      await onSubmit(buildLeaveRequestPayload(formState));
+      const payload = buildLeaveRequestPayload(formState);
+      if (isEditing) {
+        payload.id = initialData.id;
+      }
+      await onSubmit(payload);
 
       if (!isEditing) {
         setFormState(createEmptyFormState());
