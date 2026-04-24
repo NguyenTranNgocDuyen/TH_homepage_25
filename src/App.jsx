@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
+import ManagementSection from './components/ManagementSection';
 
 function ScrollHandler() {
   const { pathname, hash } = useLocation();
@@ -26,6 +27,13 @@ function ScrollHandler() {
 }
 
 function App() {
+  const homeScreen = (
+    <>
+      <HomePage />
+      <ManagementSection />
+    </>
+  );
+
   return (
     <BrowserRouter>
       <ScrollHandler />
@@ -35,7 +43,7 @@ function App() {
         <Navbar />
         <main>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={homeScreen} />
             <Route path="/about-us" element={<AboutPage />} />
           </Routes>
         </main>

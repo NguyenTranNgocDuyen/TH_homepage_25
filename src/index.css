@@ -787,6 +787,248 @@ button {
   color: var(--text-soft);
 }
 
+.management-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.management-shell {
+  padding: 28px;
+  border-radius: 32px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255, 242, 204, 0.05), transparent 100%),
+    rgba(11, 10, 8, 0.97);
+  box-shadow: var(--shadow);
+}
+
+.management-shell__header,
+.management-tabs,
+.management-form__actions,
+.management-actions,
+.management-card__top,
+.management-meta {
+  display: flex;
+  gap: 14px;
+}
+
+.management-shell__header {
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.management-tabs {
+  flex-wrap: wrap;
+}
+
+.management-tab {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 221, 138, 0.12);
+  background: rgba(255, 234, 177, 0.04);
+  color: var(--text-main);
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.management-tab:hover,
+.management-tab--active {
+  transform: translateY(-2px);
+  background: rgba(232, 185, 35, 0.14);
+  border-color: rgba(255, 210, 84, 0.28);
+}
+
+.management-feedback {
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 223, 146, 0.12);
+  font-size: 0.95rem;
+}
+
+.management-feedback--success {
+  background: rgba(232, 185, 35, 0.12);
+  color: #ffe39a;
+}
+
+.management-feedback--error {
+  background: rgba(207, 90, 67, 0.14);
+  color: #ffd2c8;
+  border-color: rgba(255, 143, 120, 0.2);
+}
+
+.management-grid {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 20px;
+}
+
+.management-panel {
+  min-height: 100%;
+  background: rgba(255, 244, 207, 0.03);
+}
+
+.management-panel__heading {
+  margin-bottom: 18px;
+}
+
+.management-form,
+.management-list {
+  display: grid;
+  gap: 18px;
+}
+
+.management-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.management-field {
+  display: grid;
+  gap: 8px;
+}
+
+.management-field span {
+  color: #ffe39a;
+  font-size: 0.92rem;
+}
+
+.management-field input,
+.management-field select,
+.management-field textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 218, 117, 0.14);
+  outline: none;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-main);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.management-field input::placeholder,
+.management-field textarea::placeholder {
+  color: rgba(255, 244, 207, 0.45);
+}
+
+.management-field input:focus,
+.management-field select:focus,
+.management-field textarea:focus {
+  border-color: rgba(255, 210, 84, 0.4);
+  box-shadow: 0 0 0 3px rgba(232, 185, 35, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.management-field option {
+  color: #111;
+}
+
+.management-field--full {
+  grid-column: 1 / -1;
+}
+
+.management-form__actions {
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.management-empty {
+  padding: 30px 18px;
+  border-radius: 20px;
+  border: 1px dashed rgba(255, 214, 95, 0.18);
+  background: rgba(255, 244, 207, 0.03);
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.management-card {
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 220, 120, 0.08);
+  background: rgba(255, 244, 207, 0.03);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.management-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 210, 84, 0.22);
+  background: rgba(255, 244, 207, 0.05);
+}
+
+.management-card__top {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.management-card__top strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.06rem;
+}
+
+.management-card__top span,
+.management-meta span,
+.management-note {
+  color: var(--text-soft);
+}
+
+.management-meta {
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+.management-note {
+  margin: 0 0 18px;
+}
+
+.management-actions {
+  flex-wrap: wrap;
+}
+
+.management-action {
+  min-width: 96px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.status-chip--positive {
+  background: rgba(232, 185, 35, 0.16);
+  color: #ffe39a;
+}
+
+.status-chip--warning {
+  background: rgba(244, 163, 0, 0.16);
+  color: #ffd17c;
+}
+
+.status-chip--danger {
+  background: rgba(207, 90, 67, 0.16);
+  color: #ffd2c8;
+}
+
+.status-chip--neutral {
+  background: rgba(255, 244, 207, 0.08);
+  color: #f3df9f;
+}
+
 .footer {
   padding: 70px 0 30px;
   background: rgba(8, 8, 8, 0.96);
@@ -876,7 +1118,8 @@ button {
 
   .hero__grid,
   .benefits-layout,
-  .dashboard-content-grid {
+  .dashboard-content-grid,
+  .management-grid {
     grid-template-columns: 1fr;
   }
 
@@ -919,7 +1162,8 @@ button {
 
   .dashboard-topbar,
   .hero-dashboard__header,
-  .footer__bottom {
+  .footer__bottom,
+  .management-shell__header {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -931,6 +1175,10 @@ button {
 
   .schedule-milestones {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .management-form__grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -963,7 +1211,9 @@ button {
   .feature-card,
   .process-card,
   .benefit-card,
-  .testimonial-card {
+  .testimonial-card,
+  .management-shell,
+  .management-card {
     padding: 20px;
   }
 
@@ -974,5 +1224,11 @@ button {
 
   .bar-chart {
     gap: 8px;
+  }
+
+  .management-feedback,
+  .management-tab,
+  .management-action {
+    width: 100%;
   }
 }
