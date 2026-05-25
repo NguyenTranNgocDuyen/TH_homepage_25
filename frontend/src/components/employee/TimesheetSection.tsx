@@ -1,4 +1,3 @@
-import { FiFileText, FiGrid } from 'react-icons/fi';
 import CorrectionRequestModal from '../CorrectionRequestModal';
 import SubmitTimesheetPanel from '../SubmitTimesheetPanel';
 import TimesheetFilterBar from '../TimesheetFilterBar';
@@ -7,7 +6,6 @@ import TimesheetTable from '../TimesheetTable';
 
 function TimesheetSection({
   timesheetData,
-  displayRows,
   periodType,
   anchorDate,
   submitState,
@@ -21,48 +19,17 @@ function TimesheetSection({
   onSubmitTimesheet,
   onCloseCorrection,
   onSubmitCorrection,
-  onExportExcel,
-  onExportPdf,
 }) {
   if (!timesheetData) {
-    return (
-      <div className="employee-section">
-        <div className="employee-section__header">
-          <h2>Bảng công của tôi</h2>
-        </div>
-        {feedback ? (
-          <div className={`submit-timesheet-panel__helper ${feedback.type === 'success' ? 'is-success' : 'is-danger'}`}>
-            {feedback.message}
-          </div>
-        ) : (
-          <div className="dashboard-content__loading">Đang tải dữ liệu bảng công...</div>
-        )}
-      </div>
-    );
+    return null;
   }
 
   return (
     <section className="employee-section">
-      <div className="employee-section__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="employee-section__header">
         <div>
           <h1>Bảng công của tôi</h1>
           <p>Xem log chấm công, cảnh báo và gửi xác nhận bảng công theo từng kỳ.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            className="dashboard-button"
-            onClick={onExportExcel}
-            style={{ backgroundColor: '#16a34a', color: 'white', borderColor: '#16a34a', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <FiGrid /> Xuất Excel
-          </button>
-          <button 
-            className="dashboard-button"
-            onClick={onExportPdf}
-            style={{ backgroundColor: '#ea580c', color: 'white', borderColor: '#ea580c', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <FiFileText /> Xuất PDF
-          </button>
         </div>
       </div>
 
@@ -110,12 +77,11 @@ function TimesheetSection({
 
       <div className="dashboard-content">
         <div className="dashboard-content__main">
-          <TimesheetTable rows={displayRows || timesheetData.rows} onRequestCorrection={onOpenCorrection} />
+          <TimesheetTable rows={timesheetData.rows} onRequestCorrection={onOpenCorrection} />
         </div>
 
         <aside className="dashboard-content__side">
           <SubmitTimesheetPanel
-            title={`Gửi bảng công Tháng ${timesheetData.period.periodMonth || new Date(timesheetData.period.startDate).getMonth() + 1}/${timesheetData.period.periodYear || new Date(timesheetData.period.startDate).getFullYear()} (${new Date(timesheetData.period.startDate).getDate()}/${new Date(timesheetData.period.startDate).getMonth() + 1} - ${new Date(timesheetData.period.endDate).getDate()}/${new Date(timesheetData.period.endDate).getMonth() + 1})`}
             stats={timesheetData.stats}
             summaryStatus={timesheetData.summary.status}
             submitState={submitState}
@@ -130,7 +96,6 @@ function TimesheetSection({
         onClose={onCloseCorrection}
         onSubmit={onSubmitCorrection}
         rows={timesheetData.rows}
-        period={timesheetData.period}
       />
     </section>
   );

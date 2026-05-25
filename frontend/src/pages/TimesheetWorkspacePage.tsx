@@ -12,7 +12,7 @@ import {
   getMonthlyTimesheetPeriodData,
   submitTimesheet,
 } from '../services/timesheetService';
-import { getDateKey, getCurrentWeekRange, getPeriodConfig } from '../utils/dateUtils';
+import { getDateKey } from '../utils/dateUtils';
 import { getAuthSession, getDashboardPathByRole } from '../utils/storage';
 import './EmployeeDashboard.css';
 import './WorkspacePages.css';
@@ -74,11 +74,7 @@ function TimesheetWorkspacePage() {
       return;
     }
 
-    const anchorDateObj = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
-    const periodConfig = getPeriodConfig(periodType, anchorDateObj);
-    const month = periodConfig.startDate.getMonth() + 1;
-    const year = periodConfig.startDate.getFullYear();
-    const date = getDateKey(periodConfig.startDate);
+    const { month, year, date } = getMonthYear(anchorDate);
 
     setIsLoading(true);
 
@@ -88,8 +84,8 @@ function TimesheetWorkspacePage() {
         userEmail,
         month,
         year,
-        periodType: periodType === 'week' ? 'week' : 'month',
-        anchorDate: anchorDateObj,
+        periodType,
+        anchorDate: date,
         createIfMissing: true,
       });
 
@@ -123,16 +119,6 @@ function TimesheetWorkspacePage() {
     return canSubmitTimesheet(timesheetData.rows, periodCorrections, timesheetData.summary);
   }, [isLoading, timesheetData]);
 
-  const displayRows = useMemo(() => {
-    if (!timesheetData) return [];
-    if (periodType === 'month') return timesheetData.rows;
-
-    const anchorDateObj2 = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
-    const { startKey, endKey } = getCurrentWeekRange(anchorDateObj2);
-    return timesheetData.rows.filter((r) => r.date >= startKey && r.date <= endKey);
-  }, [timesheetData, periodType, anchorDate]);
-
-
   const handleOpenCorrection = (row = null) => {
     setSelectedRow(row || timesheetData?.rows[0] || null);
     setIsCorrectionOpen(true);
@@ -140,10 +126,14 @@ function TimesheetWorkspacePage() {
 
   const handleCorrectionSubmit = async (formData) => {
     try {
-      const attendanceRow = timesheetData?.rows.find((row) => row.date === formData.date) || null;
+      const attendanceRow =
+        selectedRow ||
+        timesheetData?.rows.find((row) => row.date === formData.date) ||
+        null;
 
       if (!attendanceRow?.id) {
-        throw new Error('Không tìm thấy bản ghi chấm công để tạo yêu cầu.');
+        setFeedback('Khong tim thay ban ghi cham cong de tao yeu cau.');
+        return;
       }
 
       await createCorrectionRequest({
@@ -159,13 +149,13 @@ function TimesheetWorkspacePage() {
 
       setIsCorrectionOpen(false);
       setSelectedRow(null);
-      setFeedback('Yêu cầu chỉnh sửa đã được gửi.');
+      setFeedback('Yeu cau chinh sua da duoc gui.');
       void loadTimesheet();
     } catch (error) {
-      throw new Error(
+      setFeedback(
         error.code === 'CORRECTION_PENDING_EXISTS'
-          ? 'Ngày này đã có yêu cầu chỉnh sửa chờ duyệt.'
-          : error.message || 'Không thể tạo yêu cầu chỉnh sửa. Vui lòng thử lại.',
+          ? 'Ngay nay da co yeu cau chinh sua cho duyet.'
+          : error.message || 'Khong the tao yeu cau chinh sua. Vui long thu lai.',
       );
     }
   };
@@ -350,12 +340,11 @@ function TimesheetWorkspacePage() {
 
       <div className="dashboard-content">
         <div className="dashboard-content__main">
-          <TimesheetTable rows={displayRows} onRequestCorrection={handleOpenCorrection} />
+          <TimesheetTable rows={timesheetData.rows} onRequestCorrection={handleOpenCorrection} />
         </div>
 
         <aside className="dashboard-content__side">
           <SubmitTimesheetPanel
-            title={`Gửi bảng công Tháng ${new Date(timesheetData.period.startDate).getMonth() + 1}/${new Date(timesheetData.period.startDate).getFullYear()}`}
             stats={timesheetData.stats}
             summaryStatus={timesheetData.summary.status}
             submitState={{
@@ -376,7 +365,6 @@ function TimesheetWorkspacePage() {
         }}
         onSubmit={handleCorrectionSubmit}
         rows={timesheetData.rows}
-        period={timesheetData.period}
       />
     </div>
   );
