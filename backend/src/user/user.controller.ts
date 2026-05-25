@@ -418,20 +418,15 @@ export class EmployeeImportController {
   @UseGuards(JwtAuthGuard, UserAccessGaurd)
   @RequirePermission('admin')
   @UseInterceptors(FileInterceptor('file'))
-  async importEmployees(@UploadedFile() file: Express.Multer.File): Promise<
-    ResponseDto<{
-      importedCount: number;
-      errors: Array<{ row: number; message: string }>;
-      successes: Array<{ row: number; userID: string; username: string }>;
-    }>
-  > {
+  async importEmployees(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ResponseDto<{ importedCount: number; errors: Array<{ row: number; message: string }> }>> {
     const result = await this.userService.importEmployeesFromExcel(file);
 
     if (result.errors.length > 0 && result.importedCount === 0) {
       throw new BadRequestException({
         message: 'Import Excel that bai. Vui long kiem tra cac dong loi.',
         errors: result.errors,
-        successes: [],
       });
     }
 

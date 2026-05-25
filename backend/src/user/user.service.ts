@@ -35,6 +35,7 @@ interface ImportEmployeeRow {
   email: string;
   password: string;
   departmentName?: string;
+  title?: string;
   roleName: string;
   salaryCoefficient: number;
   leaveBalance: number;
@@ -46,16 +47,9 @@ interface ImportEmployeeError {
   message: string;
 }
 
-interface ImportEmployeeSuccess {
-  row: number;
-  userID: string;
-  username: string;
-}
-
 interface ImportEmployeesResult {
   importedCount: number;
   errors: ImportEmployeeError[];
-  successes: ImportEmployeeSuccess[];
 }
 
 type ImportSheetRow = unknown[];
@@ -72,28 +66,11 @@ export class UserService {
   ) {}
 
   async getAllUser(): Promise<ResponseDto<UserDto[]>> {
-    const users = await this.prismaService.user.findMany({
-      include: {
-        role: true,
-        department: true,
-      },
-    });
-
-    const sanitizedUsers = users.map((user) => {
-      const sanitizedUser = {
-        ...user,
-        roleName: user.role?.nameRole,
-        departmentName: user.department?.departmentName,
-      };
-
-      delete (sanitizedUser as { hashedPassword?: unknown }).hashedPassword;
-      return sanitizedUser;
-    });
-
+    const users: UserDto[] = await this.prismaService.user.findMany({});
     return {
       statusCode: OK_CODE,
       message: 'get all users successfull',
-      data: sanitizedUsers,
+      data: users,
     };
   }
 
@@ -353,7 +330,6 @@ export class UserService {
       return {
         importedCount: 0,
         errors: [{ row: 0, message: 'Vui long chon file Excel de import.' }],
-        successes: [],
       };
     }
 
@@ -361,7 +337,6 @@ export class UserService {
       return {
         importedCount: 0,
         errors: [{ row: 0, message: 'Chi chap nhan file .xlsx hoac .xls.' }],
-        successes: [],
       };
     }
 
@@ -372,17 +347,16 @@ export class UserService {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = firstSheetName ? workbook.Sheets[firstSheetName] : null;
       sheetRows = worksheet
-        ? XLSX.utils.sheet_to_json(worksheet, {
+        ? (XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
             defval: '',
             raw: false,
-          })
+          }) as ImportSheetRow[])
         : [];
     } catch {
       return {
         importedCount: 0,
         errors: [{ row: 0, message: 'Khong the doc noi dung file Excel.' }],
-        successes: [],
       };
     }
 
@@ -390,13 +364,12 @@ export class UserService {
       return {
         importedCount: 0,
         errors: [{ row: 0, message: 'File Excel chua co du lieu nhan vien.' }],
-        successes: [],
       };
     }
 
     const headerMap = buildHeaderMap(sheetRows[0]);
     const requiredHeaders = [
-      'username',
+      'ho ten',
       'email',
       'mat khau tam thoi',
       'phong ban',
@@ -415,7 +388,6 @@ export class UserService {
             message: `Thieu cot bat buoc: ${missingHeaders.join(', ')}.`,
           },
         ],
-        successes: [],
       };
     }
 
@@ -454,10 +426,11 @@ export class UserService {
         return;
       }
 
-      const username = getCellValue(row, headerMap, 'username');
+      const username = getCellValue(row, headerMap, 'ho ten');
       const email = getCellValue(row, headerMap, 'email').toLowerCase();
       const password = getCellValue(row, headerMap, 'mat khau tam thoi');
       const departmentName = getCellValue(row, headerMap, 'phong ban');
+      const title = getCellValue(row, headerMap, 'chuc vu');
       const rawRoleName = getCellValue(row, headerMap, 'vai tro');
       const salaryCoefficient = parseImportNumber(
         getCellValue(row, headerMap, 'he so luong'),
@@ -467,9 +440,7 @@ export class UserService {
         getCellValue(row, headerMap, 'so ngay phep mac dinh'),
         12,
       );
-      const isActive = parseImportStatus(
-        getCellValue(row, headerMap, 'trang thai'),
-      );
+      const isActive = parseImportStatus(getCellValue(row, headerMap, 'trang thai'));
       const normalizedRoleName = normalizeImportRole(rawRoleName);
       const matchedDepartment = departmentsByName.get(
         normalizeImportText(departmentName),
@@ -477,11 +448,11 @@ export class UserService {
       const rowErrors: string[] = [];
 
       if (!username) {
-        rowErrors.push('Username khong duoc trong');
+        rowErrors.push('Ho ten khong duoc trong');
       } else if (existingUsernames.has(username.toLowerCase())) {
-        rowErrors.push('Username da ton tai');
+        rowErrors.push('Ho ten/username da ton tai');
       } else if (seenUsernames.has(username.toLowerCase())) {
-        rowErrors.push('Username bi trung trong file');
+        rowErrors.push('Ho ten/username bi trung trong file');
       }
 
       if (!email) {
@@ -498,10 +469,7 @@ export class UserService {
         rowErrors.push('Mat khau tam thoi khong duoc trong');
       }
 
-      if (
-        !normalizedRoleName ||
-        !rolesByName.has(normalizeImportText(normalizedRoleName))
-      ) {
+      if (!normalizedRoleName || !rolesByName.has(normalizeImportText(normalizedRoleName))) {
         rowErrors.push('Vai tro khong hop le');
       }
 
@@ -520,9 +488,7 @@ export class UserService {
       }
 
       if (rowErrors.length > 0) {
-        rowErrors.forEach((message) =>
-          errors.push({ row: rowNumber, message }),
-        );
+        rowErrors.forEach((message) => errors.push({ row: rowNumber, message }));
         return;
       }
 
@@ -534,6 +500,7 @@ export class UserService {
         email,
         password,
         departmentName: matchedDepartment?.departmentName,
+        title,
         roleName: normalizedRoleName,
         salaryCoefficient,
         leaveBalance,
@@ -542,15 +509,15 @@ export class UserService {
     });
 
     if (rows.length === 0 && errors.length === 0) {
-      errors.push({
-        row: 0,
-        message: 'File Excel khong co dong du lieu hop le.',
-      });
+      errors.push({ row: 0, message: 'File Excel khong co dong du lieu hop le.' });
+    }
+
+    if (errors.length > 0) {
+      return { importedCount: 0, errors };
     }
 
     let importedCount = 0;
     const importErrors: ImportEmployeeError[] = [];
-    const successes: ImportEmployeeSuccess[] = [];
 
     for (const row of rows) {
       const result = await this.createUser({
@@ -566,13 +533,7 @@ export class UserService {
       });
 
       if (result.statusCode === CREATED_RESPONE) {
-        const successResult = result as ResponseDto<UserDto>;
         importedCount += 1;
-        successes.push({
-          row: row.rowNumber,
-          userID: successResult.data?.userID || '',
-          username: row.username,
-        });
       } else {
         importErrors.push({
           row: row.rowNumber,
@@ -581,7 +542,7 @@ export class UserService {
       }
     }
 
-    return { importedCount, errors: [...errors, ...importErrors], successes };
+    return { importedCount, errors: importErrors };
   }
   async updateUser(
     userID: string,
@@ -1153,14 +1114,11 @@ export class UserService {
         message: department.message,
       };
 
-    const users: UserDto[] = (await this.prismaService.user.findMany({
+    const users: UserDto[] = await this.prismaService.user.findMany({
       where: {
         departmentID,
       },
-      include: {
-        role: true,
-      },
-    })) as unknown as UserDto[];
+    });
 
     return {
       statusCode: OK_CODE,
@@ -1256,38 +1214,21 @@ function getRawCellValue(value: unknown): string {
     return value.toISOString();
   }
 
-  if (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    typeof value === 'bigint'
-  ) {
-    return String(value);
-  }
-
   if (typeof value === 'object') {
-    const cell = value as Record<string, unknown>;
-
-    if (cell.text !== undefined) {
-      return getRawCellValue(cell.text);
+    if ('text' in value && value.text) {
+      return String(value.text);
     }
 
-    if (cell.result !== undefined) {
-      return getRawCellValue(cell.result);
+    if ('result' in value && value.result !== undefined) {
+      return String(value.result);
     }
 
-    if (Array.isArray(cell.richText)) {
-      return cell.richText
-        .map((item) =>
-          typeof item === 'object' && item !== null
-            ? getRawCellValue((item as Record<string, unknown>).text)
-            : '',
-        )
-        .join('');
+    if ('richText' in value && Array.isArray(value.richText)) {
+      return value.richText.map((item) => item.text).join('');
     }
   }
 
-  return '';
+  return String(value);
 }
 
 function isEmptyExcelRow(row: ImportSheetRow): boolean {
@@ -1355,11 +1296,7 @@ function registerDepartmentAliases(
 function normalizeImportRole(value: string): string {
   const normalized = normalizeImportText(value).replace(/[\s_-]+/g, '');
 
-  if (
-    normalized === 'hr' ||
-    normalized === 'admin' ||
-    normalized === 'hradmin'
-  ) {
+  if (normalized === 'hr' || normalized === 'admin' || normalized === 'hradmin') {
     return 'admin';
   }
 

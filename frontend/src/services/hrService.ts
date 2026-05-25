@@ -24,16 +24,9 @@ export interface HrImportError {
   message: string;
 }
 
-export interface HrImportSuccess {
-  row: number;
-  employeeCode: string;
-  username: string;
-}
-
 export interface HrImportResult {
   importedCount: number;
   errors: HrImportError[];
-  successes: HrImportSuccess[];
 }
 
 interface LeaveTypePayload {
@@ -111,39 +104,22 @@ export async function importHrUsersExcel(file: File): Promise<HrImportResult> {
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     );
-    const result = unwrapBackendData<any>(response.data);
+    const result = unwrapBackendData<HrImportResult>(response.data);
 
     return {
       importedCount: Number(result?.importedCount || 0),
       errors: Array.isArray(result?.errors) ? result.errors : [],
-      successes: Array.isArray(result?.successes)
-        ? result.successes.map((s: any) => ({
-            row: Number(s.row || 0),
-            employeeCode: s.userID ? `EMP-${String(s.userID).slice(0, 8).toUpperCase()}` : 'EMP',
-            username: String(s.username || ''),
-          }))
-        : [],
     };
   } catch (error) {
     const normalizedError = normalizeHrError(error, 'Không thể import nhân viên từ Excel.') as Error & {
       details?: unknown;
       importErrors?: HrImportError[];
-      importSuccesses?: HrImportSuccess[];
     };
 
     if (axios.isAxiosError(error)) {
       normalizedError.importErrors = getImportErrors(error.response?.data);
-      const data = error.response?.data as any;
-      normalizedError.importSuccesses = Array.isArray(data?.successes)
-        ? data.successes.map((s: any) => ({
-            row: Number(s.row || 0),
-            employeeCode: s.userID ? `EMP-${String(s.userID).slice(0, 8).toUpperCase()}` : 'EMP',
-            username: String(s.username || ''),
-          }))
-        : [];
     } else {
       normalizedError.importErrors = getImportErrors((error as { details?: unknown })?.details);
-      normalizedError.importSuccesses = [];
     }
 
     throw normalizedError;
@@ -671,24 +647,4 @@ function downloadBlob(data: BlobPart, fileName: string) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-}
-
-export async function fetchSystemLogs(limit: number = 200, skip: number = 0, startDate?: string, endDate?: string) {
-  try {
-    const response = await httpClient.get('/system-log/all', {
-      params: { limit, skip, startDate, endDate },
-    });
-    return unwrapBackendData(response.data) || { logs: [], total: 0 };
-  } catch (error) {
-    throw normalizeHrError(error, 'Khong the tai nhat ky he thong.');
-  }
-}
-
-export async function toggleSystemLogAnomaly(logID: string) {
-  try {
-    const response = await httpClient.patch(`/system-log/toggle-anomaly/${encodeURIComponent(logID)}`);
-    return unwrapBackendData(response.data);
-  } catch (error) {
-    throw normalizeHrError(error, 'Khong the thay doi trang thai log.');
-  }
 }

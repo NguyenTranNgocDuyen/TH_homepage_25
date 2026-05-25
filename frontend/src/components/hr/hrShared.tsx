@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 import { formatDate } from '../../utils/dateUtils';
 
@@ -10,6 +9,7 @@ export const emptyEmployeeForm = {
   email: '',
   password: '',
   departmentId: '',
+  title: '',
   role: 'employee',
   salaryCoefficient: '2.0',
   leaveBalance: '12',
@@ -40,7 +40,7 @@ export function ModalShell({
   children: ReactNode;
   onClose: () => void;
 }) {
-  return createPortal(
+  return (
     <div className="modal-backdrop" role="presentation">
       <article className="modal-card hr-modal" role="dialog" aria-modal="true" aria-label={title}>
         <div className="hr-modal__header">
@@ -51,8 +51,7 @@ export function ModalShell({
         </div>
         {children}
       </article>
-    </div>,
-    document.body
+    </div>
   );
 }
 
@@ -63,7 +62,6 @@ export function FormField({
   step = undefined,
   value,
   error,
-  disabled,
   onChange,
 }: {
   label: string;
@@ -72,13 +70,12 @@ export function FormField({
   step?: string;
   value: string;
   error?: string;
-  disabled?: boolean;
-  onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onChange: (event: any) => void;
 }) {
   return (
     <label>
       <span>{label}</span>
-      <input name={name} type={type} step={step} value={value} onChange={onChange} disabled={disabled} />
+      <input name={name} type={type} step={step} value={value} onChange={onChange} />
       {error ? <small>{error}</small> : null}
     </label>
   );
@@ -134,6 +131,10 @@ export function validateEmployeeForm(
 
   if (!form.departmentId) {
     errors.departmentId = 'Phòng ban không được trống.';
+  }
+
+  if (!form.title.trim()) {
+    errors.title = 'Chức vụ không được trống.';
   }
 
   if (!form.role) {
@@ -244,8 +245,6 @@ export function getStatusClass(status?: string) {
       return 'dashboard-status-badge--warning';
     case 'Rejected':
       return 'dashboard-status-badge--danger';
-    case 'Cancelled':
-      return 'dashboard-status-badge--neutral';
     case 'Inactive':
       return 'dashboard-status-badge--neutral';
     default:
@@ -281,8 +280,6 @@ export function formatHrStatus(status?: string) {
       return 'Đã duyệt';
     case 'Rejected':
       return 'Từ chối';
-    case 'Cancelled':
-      return 'Đã hủy';
     case 'Ready':
       return 'Sẵn sàng';
     default:
