@@ -20,33 +20,33 @@ export function exportTimesheetReportPdf({
   filterNames,
 }: ExportTimesheetReportPdfInput): void {
   const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
+  iframe.style.position = 'absolute';
+  iframe.style.width = '0px';
+  iframe.style.height = '0px';
+  iframe.style.border = 'none';
   document.body.appendChild(iframe);
 
-  const contentWindow = iframe.contentWindow;
-  if (!contentWindow) {
+  const doc = iframe.contentWindow?.document;
+  if (!doc) {
     document.body.removeChild(iframe);
-    throw new Error('Cannot create print iframe.');
+    throw new Error('Cannot create print frame.');
   }
 
-  contentWindow.document.open();
-  contentWindow.document.write(buildTimesheetReportHtml({ title, filters, rows, summary }));
-  contentWindow.document.close();
+  doc.open();
+  doc.write(buildTimesheetReportHtml({ title, filters, rows, summary, filterNames }));
+  doc.close();
 
-  contentWindow.focus();
-  contentWindow.setTimeout(() => {
-    contentWindow.print();
+  if (iframe.contentWindow) {
+    iframe.contentWindow.focus();
     setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
-    }, 2000);
-  }, 250);
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 1000);
+    }, 250);
+  }
 }
 
 function buildTimesheetReportHtml({
