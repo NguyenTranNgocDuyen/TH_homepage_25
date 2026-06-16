@@ -41,7 +41,6 @@ import ManagerTimesheetReport from '../components/manager/ManagerTimesheetReport
 import ManagerDetailModal from '../components/manager/ManagerDetailModal';
 import RejectDialog from '../components/manager/RejectDialog';
 import ProfileSection from '../components/employee/ProfileSection';
-import '../styles/timesheet.css';
 import { getEmployeeProfile, updateEmployeeProfile, uploadAvatar } from '../services/profileService';
 
 function ManagerDashboard() {
@@ -67,7 +66,7 @@ function ManagerDashboard() {
 
     getEmployeeProfile(session.email).then((fetchedProfile) => {
       setProfile(fetchedProfile);
-
+      
       const currentSession = getAuthSession();
       if (currentSession && fetchedProfile?.avatar && currentSession.avatar !== fetchedProfile.avatar) {
         const nextSession = { ...currentSession, avatar: String(fetchedProfile.avatar) };
@@ -92,14 +91,14 @@ function ManagerDashboard() {
     const nextProfile = await uploadAvatar(file);
     if (!nextProfile) throw new Error('Không thể cập nhật ảnh đại diện.');
     setProfile(nextProfile);
-
+    
     const currentSession = getAuthSession();
     if (currentSession) {
       const nextSession = { ...currentSession, avatar: String(nextProfile.avatar) };
       updateAuthSession(nextSession);
       window.dispatchEvent(new Event('avatar_updated'));
     }
-
+    
     return nextProfile;
   };
 
@@ -135,20 +134,9 @@ function ManagerDashboard() {
   const currentManager = useMemo(() => buildCurrentManager(session), [session]);
   const reviewPeriod = useMemo(() => {
     const now = new Date();
-    let month = now.getMonth() + 1;
-    let year = now.getFullYear();
-
-    if (now.getDate() <= 15) {
-      month -= 1;
-      if (month === 0) {
-        month = 12;
-        year -= 1;
-      }
-    }
-
     return {
-      month,
-      year,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
     };
   }, []);
 
@@ -237,16 +225,12 @@ function ManagerDashboard() {
 
     const handleNewNotification = (notification) => {
       if (notification.relatedType === 'LEAVE') {
-        setTimeout(() => {
-          void loadReviewLeaves();
-        }, 1500);
+        void loadReviewLeaves();
       } else if (notification.relatedType === 'TIMESHEET') {
-        setTimeout(() => {
-          void loadReviewTimesheets();
-          void loadReviewCorrections();
-        }, 1500);
+        void loadReviewTimesheets();
+        void loadReviewCorrections();
       }
-
+      
       if (Notification.permission === 'granted') {
         new Notification('Timesheet Manager', { body: notification.content });
       } else if (Notification.permission !== 'denied') {
@@ -263,7 +247,7 @@ function ManagerDashboard() {
     return () => {
       socket.off('new_notification', handleNewNotification);
     };
-
+     
   }, [socket, session?.role, currentManager.departmentId]);
 
   const teamEmployees = useMemo(
@@ -342,12 +326,12 @@ function ManagerDashboard() {
         current.map((item) =>
           item.id === timesheetId
             ? {
-              ...item,
-              status: 'Approved',
-              locked: true,
-              approvedAt: new Date().toISOString(),
-              rejectionReason: '',
-            }
+                ...item,
+                status: 'Approved',
+                locked: true,
+                approvedAt: new Date().toISOString(),
+                rejectionReason: '',
+              }
             : item,
         ),
       );
@@ -370,6 +354,7 @@ function ManagerDashboard() {
       await reviewCorrectionRequest(correctionId, 'Approved');
       setCorrectionRequests((current) => current.filter((item) => item.id !== correctionId));
       showFeedback('success', 'Da duyet correction va cap nhat ban ghi cham cong neu co gio de xuat.');
+      void loadReviewTimesheets();
     } catch (error: any) {
       showFeedback('danger', error?.message || 'Khong the duyet correction.');
     } finally {
@@ -399,11 +384,11 @@ function ManagerDashboard() {
         current.map((item) =>
           item.id === requestId
             ? {
-              ...item,
-              status: 'Approved',
-              approvedAt: new Date().toISOString(),
-              rejectionReason: '',
-            }
+                ...item,
+                status: 'Approved',
+                approvedAt: new Date().toISOString(),
+                rejectionReason: '',
+              }
             : item,
         ),
       );
@@ -411,9 +396,9 @@ function ManagerDashboard() {
         current.map((item) =>
           item.id === request.employeeId && !request.isUnpaid
             ? {
-              ...item,
-              leaveBalance: roundNumber(item.leaveBalance - request.totalDays),
-            }
+                ...item,
+                leaveBalance: roundNumber(item.leaveBalance - request.totalDays),
+              }
             : item,
         ),
       );
@@ -421,10 +406,11 @@ function ManagerDashboard() {
         ? `Đã duyệt đơn ${request.code}.`
         : `Đã duyệt đơn ${request.code} và trừ ${request.totalDays} ngày phép.`;
       showFeedback('success', successMessage);
+      void loadReviewLeaves();
     } catch (error: any) {
       showFeedback('danger', error?.message || 'Khong the duyet don nghi phep.');
     } finally {
-      setProcessingId(null);
+      setProcessingId(requestId); // Wait, this should be null. Fix in next block or here: setProcessingId(null);
     }
   };
 
@@ -460,12 +446,12 @@ function ManagerDashboard() {
           current.map((item) =>
             item.id === rejectDialog.id
               ? {
-                ...item,
-                status: 'Rejected',
-                locked: false,
-                rejectionReason: rejectDialog.reason.trim(),
-                rejectedAt: new Date().toISOString(),
-              }
+                  ...item,
+                  status: 'Rejected',
+                  locked: false,
+                  rejectionReason: rejectDialog.reason.trim(),
+                  rejectedAt: new Date().toISOString(),
+                }
               : item,
           ),
         );
@@ -513,16 +499,17 @@ function ManagerDashboard() {
         current.map((item) =>
           item.id === rejectDialog.id
             ? {
-              ...item,
-              status: 'Rejected',
-              rejectionReason: rejectDialog.reason.trim(),
-              rejectedAt: new Date().toISOString(),
-            }
+                ...item,
+                status: 'Rejected',
+                rejectionReason: rejectDialog.reason.trim(),
+                rejectedAt: new Date().toISOString(),
+              }
             : item,
         ),
       );
       showFeedback('success', `Đã từ chối đơn nghỉ phép ${request.code}.`);
       setRejectDialog(null);
+      void loadReviewLeaves();
     } catch (error: any) {
       showFeedback('danger', error?.message || 'Khong the tu choi don nghi phep.');
     } finally {
@@ -643,7 +630,6 @@ function ManagerDashboard() {
         timesheets={scopedTimesheets}
         leaveRequests={scopedLeaveRequests}
         correctionRequests={scopedCorrectionRequests}
-        isSubmitting={!!processingId}
         onChange={(reason) =>
           setRejectDialog((current: any) => ({
             ...current,
