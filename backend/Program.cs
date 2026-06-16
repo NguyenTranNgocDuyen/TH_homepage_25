@@ -3,11 +3,13 @@ using TimesheetApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add services to the container.
 
 // Add DbContext
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<TimesheetDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Add CORS
 builder.Services.AddCors(options =>
