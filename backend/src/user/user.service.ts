@@ -35,6 +35,7 @@ interface ImportEmployeeRow {
   email: string;
   password: string;
   departmentName?: string;
+  title?: string;
   roleName: string;
   salaryCoefficient: number;
   leaveBalance: number;
@@ -441,6 +442,7 @@ export class UserService {
       const email = getCellValue(row, headerMap, 'email').toLowerCase();
       const password = getCellValue(row, headerMap, 'mat khau tam thoi');
       const departmentName = getCellValue(row, headerMap, 'phong ban');
+      const title = getCellValue(row, headerMap, 'chuc vu');
       const rawRoleName = getCellValue(row, headerMap, 'vai tro');
       const salaryCoefficient = parseImportNumber(
         getCellValue(row, headerMap, 'he so luong'),
@@ -517,6 +519,7 @@ export class UserService {
         email,
         password,
         departmentName: matchedDepartment?.departmentName,
+        title,
         roleName: normalizedRoleName,
         salaryCoefficient,
         leaveBalance,

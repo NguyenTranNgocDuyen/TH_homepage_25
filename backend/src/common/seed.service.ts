@@ -101,8 +101,8 @@ const DEMO_USERS: Record<SeedUserKey, DemoUserConfig> = {
     salaryCoefficient: 2.6,
   },
   employee1: {
-    email: 'nguyentranngocduyen11a1@gmail.com',
-    username: 'Ngọc Duyên',
+    email: 'nv1@company.com',
+    username: 'Employee 1',
     roleName: 'employee',
     departmentKey: 'engineering',
     salaryCoefficient: 1.35,

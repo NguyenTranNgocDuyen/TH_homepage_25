@@ -100,7 +100,7 @@ export class AttendanceModuleService {
     try {
       const executeLogic = async (
         dbCtx: Prisma.TransactionClient,
-      ): Promise<ResponseDto<unknown>> => {
+      ): Promise<ResponseDto<any>> => {
         const now = new Date();
         if (now.getHours() < 6) {
           return {
@@ -190,11 +190,11 @@ export class AttendanceModuleService {
           select: { checkOut: true },
         });
 
-        if (lastEntry && lastEntry.checkOut === null) {
+        if (lastEntry) {
           return {
             statusCode: BADREQUEST_CODE,
             message:
-              'You have already checked in. Please check out first before checking in again.',
+              'You have already checked in today. Multiple check-ins per day are not allowed.',
           };
         }
 
@@ -260,7 +260,7 @@ export class AttendanceModuleService {
 
       const executeLogic = async (
         dbCtx: Prisma.TransactionClient,
-      ): Promise<ResponseDto<unknown>> => {
+      ): Promise<ResponseDto<any>> => {
         const now = new Date();
         const month = now.getMonth() + 1;
         const year = now.getFullYear();
@@ -373,7 +373,7 @@ export class AttendanceModuleService {
         };
       };
 
-      let result: ResponseDto<unknown>;
+      let result: ResponseDto<any>;
       if (tx) {
         result = await executeLogic(tx);
       } else {
