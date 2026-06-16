@@ -3,7 +3,8 @@ namespace TimesheetApi.Models;
 public class TimesheetEntry
 {
     public int Id { get; set; }
-    public string EmployeeName { get; set; } = string.Empty;
+    public int UserId { get; set; } //lk voi bang user
+    public User? User { get; set; }
     public DateTime WorkDate { get; set; }
     public DateTime CheckInTime { get; set; }
     public DateTime CheckOutTime { get; set; }
