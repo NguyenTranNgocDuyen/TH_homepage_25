@@ -738,8 +738,8 @@ export class MonthlyTimeSheetService {
           );
         }
 
-        let expectedMonth = currentMonth;
-        let expectedYear = currentYear;
+        const expectedMonth = currentMonth;
+        const expectedYear = currentYear;
 
         if (
           monthGet.month !== expectedMonth ||

@@ -49,7 +49,10 @@ export class LeaveApplicationService {
       }
 
       const currentYear = new Date().getFullYear();
-      if (start.getFullYear() > currentYear || end.getFullYear() > currentYear) {
+      if (
+        start.getFullYear() > currentYear ||
+        end.getFullYear() > currentYear
+      ) {
         return {
           statusCode: BADREQUEST_CODE,
           message: 'Cannot create leave application for the next year',

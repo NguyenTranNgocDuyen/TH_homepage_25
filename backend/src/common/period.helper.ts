@@ -1,4 +1,7 @@
-export function getTimesheetPeriod(date: Date): { month: number; year: number } {
+export function getTimesheetPeriod(date: Date): {
+  month: number;
+  year: number;
+} {
   const d = date.getDate();
   const m = date.getMonth() + 1; // 1-12
   const y = date.getFullYear();
