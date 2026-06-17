@@ -106,7 +106,7 @@ export class AuthService {
       const userGet = await this.userService.updateUser(data?.userID || '', {
         refreshToken: newRefreshToken,
       });
-      if (userGet.statusCode !== OK_CODE) return { statusCode, message };
+      if (userGet.statusCode !== OK_CODE) return { statusCode: userGet.statusCode, message: userGet.message };
 
       return {
         statusCode: CREATED_RESPONE,
@@ -493,8 +493,8 @@ export class AuthService {
 
     if (updateUser.statusCode !== OK_CODE)
       return {
-        statusCode,
-        message,
+        statusCode: updateUser.statusCode,
+        message: updateUser.message,
       };
 
     return {
@@ -560,11 +560,27 @@ export class AuthService {
     });
 
     // Send Email
-    await this.emailService.send({
+    const emailResult = await this.emailService.send({
       to: email,
       subject: '[HRM] Mã xác nhận đặt lại mật khẩu',
       text: `Xin chào ${userResult.data.username},\n\nMã xác nhận để đặt lại mật khẩu của bạn là: ${code}\n\nMã này sẽ hết hạn sau 5 phút.\nNếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng bỏ qua email này.\n\nTrân trọng,\nHệ thống HRM`,
     });
+
+    if (!emailResult.sent) {
+      // Revert code in DB so a failed send does not leave an active OTP code
+      await this.prismaService.user.update({
+        where: { userID: userResult.data.userID },
+        data: {
+          resetPasswordCode: null,
+          resetPasswordExpires: null,
+        },
+      });
+
+      return {
+        statusCode: BADREQUEST_CODE,
+        message: `Failed to send email. Please check your configuration or try again later. Error: ${emailResult.error || emailResult.message}`,
+      };
+    }
 
     return {
       statusCode: OK_CODE,
