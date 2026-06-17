@@ -20,7 +20,9 @@ export class LeaveCronService {
         UPDATE "users" 
         SET "remainDaysofLeave" = "totalDaysofLeave"
       `;
-      this.logger.log(`Hoàn thành reset ngày phép. Số lượng nhân viên được cập nhật: ${result}`);
+      this.logger.log(
+        `Hoàn thành reset ngày phép. Số lượng nhân viên được cập nhật: ${result}`,
+      );
     } catch (error) {
       this.logger.error('Lỗi khi chạy cron job reset ngày phép:', error);
     }
