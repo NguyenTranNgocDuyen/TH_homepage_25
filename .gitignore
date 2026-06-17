@@ -1,5 +1,12 @@
 node_modules/
 dist/
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
 .DS_Store
 *.log
 npm-debug.log*
@@ -9,3 +16,6 @@ pnpm-debug.log*
 coverage/
 .vite/
 practice1/
+.venv/
+*.py
+google_credentials.json
