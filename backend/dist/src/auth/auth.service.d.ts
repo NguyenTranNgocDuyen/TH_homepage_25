@@ -1,0 +1,38 @@
+import { UserService } from "../user/user.service";
+import ResponseDto, { AnotherError } from "../common/response.dto";
+import LoginDto from './dto/login.dto';
+import { BycyptHashedService } from "../common/bycypt-hashed/bycypt-hashed.service";
+import AuthDto from './dto/auth.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { EmailService } from "../common/email.service";
+export declare class AuthService {
+    private userService;
+    private bcryptHashedservice;
+    private prismaService;
+    private emailService;
+    constructor(userService: UserService, bcryptHashedservice: BycyptHashedService, prismaService: PrismaService, emailService: EmailService);
+    login(loginDto: LoginDto): Promise<ResponseDto<AuthDto>>;
+    googleLogin(email: string): Promise<ResponseDto<AuthDto>>;
+    isGoogleConfigured(): boolean;
+    isMicrosoftConfigured(): boolean;
+    createOAuthState(provider: string): string;
+    verifyOAuthState(state: string | undefined, provider: string): boolean;
+    getMicrosoftAuthorizationUrl(state: string): string;
+    microsoftLoginWithCode(code: string): Promise<ResponseDto<AuthDto>>;
+    buildSsoSuccessRedirect(provider: string, auth: AuthDto): string;
+    buildSsoErrorRedirect(provider: string, code: string, message: string): string;
+    private ssoLogin;
+    private signOAuthState;
+    private isConfiguredValue;
+    private getSsoRedirectUrl;
+    private exchangeMicrosoftCode;
+    private fetchMicrosoftProfile;
+    genAccessToken(username: string | undefined, userID: string | undefined, email: string | undefined, roleId: string | null | undefined, departmentID: string | null | undefined, roleName?: string | null): string;
+    genRefreshToken(userID: string, username: string, email: string): string;
+    refreshToken(userID: string, refreshToken: string): Promise<ResponseDto<AuthDto>>;
+    logout(userID: string): Promise<ResponseDto<AnotherError>>;
+    private toAuthUser;
+    sendResetCode(email: string): Promise<ResponseDto<any>>;
+    verifyResetCode(email: string, code: string): Promise<ResponseDto<any>>;
+    resetPassword(email: string, code: string, newPassword: string): Promise<ResponseDto<any>>;
+}
