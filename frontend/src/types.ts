@@ -51,6 +51,7 @@ export interface Attendance {
   deviceInfoAtCheckOut: string | null;
   hasIpWarning: boolean;
   note: string;
+  monthlyTimesheetID?: string;
 }
 
 export interface CorrectionRequest {
@@ -112,6 +113,7 @@ export interface Timesheet {
   rejectionReason?: string;
   approvedAt?: string;
   rejectedAt?: string;
+  records?: Attendance[];
 }
 
 export interface TimesheetSummary {

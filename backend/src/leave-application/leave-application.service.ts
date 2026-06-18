@@ -68,6 +68,36 @@ export class LeaveApplicationService {
         };
       }
 
+      const existingLeaves = await this.prisma.leaveApplication.findMany({
+        where: {
+          senderID: userID,
+          status: { in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
+        },
+      });
+
+      const toLocalDateString = (date: Date): string => {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        return formatter.format(date);
+      };
+
+      const hasOverlap = existingLeaves.some((leave) => {
+        const dbStart = toLocalDateString(leave.startDate);
+        const dbEnd = toLocalDateString(leave.endDate);
+        return dbStart <= endDate && dbEnd >= startDate;
+      });
+
+      if (hasOverlap) {
+        return {
+          statusCode: BADREQUEST_CODE,
+          message: 'Bạn đã có đơn xin nghỉ trùng khoảng thời gian này (đang chờ duyệt hoặc đã được duyệt)',
+        };
+      }
+
       const user = await this.prisma.user.findUnique({ where: { userID } });
       if (!user) {
         return { statusCode: NOTFOUND_CODE, message: 'User not found' };

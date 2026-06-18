@@ -192,9 +192,15 @@ function normalizeNotifications(data: BackendNotification[] | undefined): Notifi
     return [];
   }
 
+  const seen = new Set<string>();
   return data
     .map(normalizeNotification)
-    .filter((item) => item.id)
+    .filter((item) => {
+      if (!item.id) return false;
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    })
     .sort((left, right) => toTimestamp(right.createdAt) - toTimestamp(left.createdAt));
 }
 

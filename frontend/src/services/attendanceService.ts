@@ -219,10 +219,11 @@ function sortAttendanceRecords(records: Attendance[]): Attendance[] {
 }
 
 function cacheUserRecords(userKey: string, records: Attendance[]): void {
-  const sortedRecords = sortAttendanceRecords(records);
-
   getUserCacheAliases(userKey).forEach((alias) => {
-    attendanceCacheByKey.set(alias, sortedRecords);
+    const existing = attendanceCacheByKey.get(alias) || [];
+    const merged = [...existing, ...records];
+    const unique = Array.from(new Map(merged.map((item) => [item.id, item])).values());
+    attendanceCacheByKey.set(alias, sortAttendanceRecords(unique));
   });
 }
 
@@ -276,6 +277,7 @@ function normalizeAttendanceEntry(entry: BackendAttendanceEntry, userID: string)
     deviceInfoAtCheckOut: null,
     hasIpWarning: Boolean(entry.isWarning),
     note: status === 'Missing Out' ? 'Bạn đã quên Check-out. Vui lòng giải trình.' : '',
+    monthlyTimesheetID: entry.monthlyTimesheetID || undefined,
   };
 }
 
@@ -296,9 +298,26 @@ function getTodayRecordFrom(records: Attendance[]): Attendance | null {
   return sortAttendanceRecords(records).find((record) => record.date === todayKey) || null;
 }
 
+export function getAttendancePeriod(dateInput?: Date) {
+  const date = dateInput || new Date();
+  const d = date.getDate();
+  const m = date.getMonth() + 1; // 1-12
+  const y = date.getFullYear();
+
+  if (d >= 17) {
+    if (m === 12) {
+      return { month: 1, year: y + 1 };
+    }
+    return { month: m + 1, year: y };
+  }
+
+  return { month: m, year: y };
+}
+
 async function refreshCurrentMonthAttendance(userID: string): Promise<Attendance[]> {
   const now = new Date();
-  return getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
+  const { month, year } = getAttendancePeriod(now);
+  return getMonthlyAttendance(userID, month, year);
 }
 
 export function getCurrentMockIp(): string {

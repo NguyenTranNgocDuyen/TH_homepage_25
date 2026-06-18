@@ -12,7 +12,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret:
         ENV.GOOGLE.CLIENT_SECRET || 'google-client-secret-not-configured',
       callbackURL:
-        ENV.GOOGLE.CALLBACK_URL ||
+        (ENV.GOOGLE.CALLBACK_URL || '').replace(/^"|"$/g, '') ||
         'http://localhost:3000/api/auth/google/callback',
       scope: ['email', 'profile'],
       passReqToCallback: true,

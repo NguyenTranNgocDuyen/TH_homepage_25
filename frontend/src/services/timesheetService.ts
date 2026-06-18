@@ -10,7 +10,7 @@ import type {
   TimesheetSummary,
   TimesheetWarning,
 } from '../types';
-import { getMonthlyAttendance, getUserAttendanceRecords } from './attendanceService';
+import { getMonthlyAttendance, getUserAttendanceRecords, getAttendancePeriod } from './attendanceService';
 import {
   getCorrectionByAttendanceId,
   getCorrectionsByUser,
@@ -510,6 +510,7 @@ function buildManagerTimesheet(
     rejectionReason: monthlyTimesheet.rejectionReason,
     approvedAt: monthlyTimesheet.approvedAt,
     rejectedAt: monthlyTimesheet.rejectedAt,
+    records: sortedRecords,
   };
 }
 
@@ -869,26 +870,41 @@ export async function getMonthlyTimesheetPeriodData({
     anchorDate = new Date(anchorDate);
   }
 
-  let monthlyTimesheet: MonthlyTimesheetData;
+  const periodConfig = getPeriodConfig(periodType, anchorDate);
+  const startPeriod = getAttendancePeriod(periodConfig.startDate);
+  const endPeriod = getAttendancePeriod(periodConfig.endDate);
 
-  try {
-    monthlyTimesheet = await getMonthlyTimesheet(userID, month, year);
-  } catch (error) {
-    if ((error as AppError).code !== 'TIMESHEET_NOT_FOUND' || !createIfMissing) {
-      throw error;
+  const periodsToFetch = [startPeriod];
+  if (
+    startPeriod.month !== endPeriod.month ||
+    startPeriod.year !== endPeriod.year
+  ) {
+    periodsToFetch.push(endPeriod);
+  }
+
+  for (const period of periodsToFetch) {
+    let monthlyTimesheet: MonthlyTimesheetData;
+
+    try {
+      monthlyTimesheet = await getMonthlyTimesheet(userID, period.month, period.year);
+    } catch (error) {
+      if ((error as AppError).code !== 'TIMESHEET_NOT_FOUND' || !createIfMissing) {
+        throw error;
+      }
+
+      monthlyTimesheet = await createMonthlyTimesheet(userID, period.month, period.year);
     }
 
-    monthlyTimesheet = await createMonthlyTimesheet(userID, month, year);
+    if (userEmail && userEmail !== userID) {
+      monthlyTimesheetCache.set(getMonthlyCacheKey(userEmail, period.month, period.year), {
+        ...monthlyTimesheet,
+        userEmail,
+      });
+    }
+
+    await getMonthlyAttendance(userID, period.month, period.year);
   }
 
-  if (userEmail && userEmail !== userID) {
-    monthlyTimesheetCache.set(getMonthlyCacheKey(userEmail, month, year), {
-      ...monthlyTimesheet,
-      userEmail,
-    });
-  }
-
-  await getMonthlyAttendance(userID, month, year);
   await loadCorrectionsByUser(userID, userEmail || userID);
   const data = getTimesheetByPeriod(userEmail || userID, periodType, anchorDate);
 
@@ -947,12 +963,18 @@ export async function getManagerMonthlyTimesheetsForReview(
 
     const employees = [...employeeById.values()];
 
-    if (employees.length === 0 && departmentID) {
+    // Always fetch all department users to ensure new employees without
+    // timesheets for this review period still appear in the team list.
+    if (departmentID) {
       const users = await fetchDepartmentUsers(departmentID).catch(() => []);
       users
         .map((user) => normalizeDepartmentUser(user, departmentID))
         .filter((employee) => employee.id)
-        .forEach((employee) => employeeById.set(employee.id, employee));
+        .forEach((employee) => {
+          if (!employeeById.has(employee.id)) {
+            employeeById.set(employee.id, employee);
+          }
+        });
     }
 
     return {
@@ -1152,6 +1174,7 @@ function normalizeReviewEntry(entry: BackendTimesheetEntry, userID: string): Att
     deviceInfoAtCheckOut: null,
     hasIpWarning: Boolean(entry.isWarning),
     note: status === 'Missing Out' ? 'Ban ghi thieu gio check-out.' : '',
+    monthlyTimesheetID: entry.monthlyTimesheetID || undefined,
   };
 }
 
