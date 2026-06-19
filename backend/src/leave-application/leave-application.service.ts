@@ -14,9 +14,9 @@ import {
 import { Prisma, LeaveStatus, NotificationRelatedType } from '@prisma/client';
 import { NotificationService } from 'src/notification/notification.service';
 import { EmailService } from 'src/common/email.service';
-import * as dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc';
-import * as timezone from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

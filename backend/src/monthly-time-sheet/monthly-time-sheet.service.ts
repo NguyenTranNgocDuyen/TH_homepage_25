@@ -32,9 +32,9 @@ import { EmailService } from 'src/common/email.service';
 import { ExcelHelper } from 'src/common/excel.helper';
 import { RequestUser } from 'src/common/types';
 import * as ExcelJS from 'exceljs';
-import * as dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc';
-import * as timezone from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

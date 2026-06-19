@@ -7,9 +7,9 @@ import { TimesheetStatus } from '@prisma/client';
 import { WarningService } from 'src/warning/warning.service';
 import { OK_CODE, CREATED_RESPONE } from 'src/common/code';
 import ResponseDto, { DefaultResponse } from 'src/common/response.dto';
-import * as dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc';
-import * as timezone from 'dayjs/plugin/timezone';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
