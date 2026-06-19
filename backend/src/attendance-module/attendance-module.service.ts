@@ -19,6 +19,14 @@ import GetAttendenceDto from './dto/getAttendence.dto';
 import { Prisma } from '@prisma/client';
 import { NotificationService } from 'src/notification/notification.service';
 import { getTimesheetPeriod } from 'src/common/period.helper';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 @Injectable()
 export class AttendanceModuleService {
@@ -103,7 +111,8 @@ export class AttendanceModuleService {
         dbCtx: Prisma.TransactionClient,
       ): Promise<ResponseDto<unknown>> => {
         const now = new Date();
-        if (now.getHours() < 6) {
+        const nowLocal = dayjs(now).tz(SERVER_TZ);
+        if (nowLocal.hour() < 6) {
           return {
             statusCode: BADREQUEST_CODE,
             message: 'You can only check in after 6:00 AM.',

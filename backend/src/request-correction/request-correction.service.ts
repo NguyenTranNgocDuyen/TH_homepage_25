@@ -17,6 +17,14 @@ import { EmailService } from 'src/common/email.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRequestCorrectionDto } from './dto/create-request-correction.dto';
 import { ReviewRequestCorrectionDto } from './dto/review-request-correction.dto';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 @Injectable()
 export class RequestCorrectionService {
@@ -129,7 +137,7 @@ export class RequestCorrectionService {
         const nextCheckIn = proposedCheckIn || entry?.checkIn || null;
         const nextCheckOut = proposedCheckOut || entry?.checkOut || null;
 
-        if (proposedCheckIn && proposedCheckIn.getHours() < 6) {
+        if (proposedCheckIn && dayjs(proposedCheckIn).tz(SERVER_TZ).hour() < 6) {
           return {
             statusCode: BADREQUEST_CODE,
             message: 'Proposed check-in must be 06:00 AM or later',
