@@ -976,16 +976,16 @@ export class MonthlyTimeSheetService {
         const canSubmit = accept
           ? false
           : await this.refreshCanSubmit(monthGet.monthlyTimesheetID, dCbt);
-        const reviewStatus = accept ? 'approved' : 'rejected';
         const rejectReason =
           !accept && monthlyTimesheetUpdate.reasonReject
-            ? ` Reason: ${monthlyTimesheetUpdate.reasonReject}`
+            ? ` Lý do: ${monthlyTimesheetUpdate.reasonReject}`
             : '';
+        const reviewStatusText = accept ? 'đã được phê duyệt' : 'đã bị từ chối';
         const notificationGet =
           await this.notificationService.createNotification(
             reviewerID ?? department.data.managerID,
             userGet.data.userID,
-            `Your monthly timesheet ${monthlyTimesheetUpdate.month}/${monthlyTimesheetUpdate.year} was ${reviewStatus}.${rejectReason}`,
+            `Bảng công tháng ${monthlyTimesheetUpdate.month}/${monthlyTimesheetUpdate.year} của bạn ${reviewStatusText}.${rejectReason}`,
             NotificationRelatedType.TIMESHEET,
             dCbt,
           );

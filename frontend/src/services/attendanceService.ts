@@ -8,6 +8,7 @@ import {
   formatTimeFromIso,
   getTodayDateKey,
 } from '../utils/timeUtils';
+import { getCurrentMonthRange } from '../utils/dateUtils';
 
 const ATTENDANCE_IP_KEY = 'timesheet_pro_mock_ip';
 const DEFAULT_IP = '192.168.1.20';
@@ -218,10 +219,30 @@ function sortAttendanceRecords(records: Attendance[]): Attendance[] {
   });
 }
 
-function cacheUserRecords(userKey: string, records: Attendance[]): void {
-  const sortedRecords = sortAttendanceRecords(records);
+function mergeAttendanceRecords(currentRecords: Attendance[], incomingRecords: Attendance[]): Attendance[] {
+  const recordsById = new Map<string, Attendance>();
 
-  getUserCacheAliases(userKey).forEach((alias) => {
+  currentRecords.forEach((record) => {
+    recordsById.set(record.id, record);
+  });
+
+  incomingRecords.forEach((record) => {
+    recordsById.set(record.id, record);
+  });
+
+  return [...recordsById.values()];
+}
+
+function cacheUserRecords(userKey: string, records: Attendance[], mode: 'replace' | 'merge' = 'replace'): void {
+  const aliases = getUserCacheAliases(userKey);
+  const currentRecords = mode === 'merge'
+    ? aliases.flatMap((alias) => attendanceCacheByKey.get(alias) || [])
+    : [];
+  const sortedRecords = sortAttendanceRecords(
+    mode === 'merge' ? mergeAttendanceRecords(currentRecords, records) : records,
+  );
+
+  aliases.forEach((alias) => {
     attendanceCacheByKey.set(alias, sortedRecords);
   });
 }
@@ -262,6 +283,7 @@ function normalizeAttendanceEntry(entry: BackendAttendanceEntry, userID: string)
 
   return {
     id: entryId,
+    monthlyTimesheetID: entry.monthlyTimesheetID,
     userEmail: owner,
     date,
     checkInTime: formatNullableTime(checkInIso),
@@ -297,8 +319,8 @@ function getTodayRecordFrom(records: Attendance[]): Attendance | null {
 }
 
 async function refreshCurrentMonthAttendance(userID: string): Promise<Attendance[]> {
-  const now = new Date();
-  return getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
+  const { periodMonth, periodYear } = getCurrentMonthRange(new Date());
+  return getMonthlyAttendance(userID, periodMonth, periodYear);
 }
 
 export function getCurrentMockIp(): string {
@@ -346,7 +368,7 @@ export async function getMonthlyAttendance(
       ? entries.map((entry) => normalizeAttendanceEntry(entry, userID))
       : [];
 
-    cacheUserRecords(userID, records);
+    cacheUserRecords(userID, records, 'merge');
     return sortAttendanceRecords(records);
   } catch (error) {
     // Kiểm tra status code = 404 từ cả Axios lỗi gốc và lỗi đã qua chuẩn hóa

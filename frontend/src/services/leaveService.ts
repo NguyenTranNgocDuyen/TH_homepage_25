@@ -86,7 +86,20 @@ export function calculateLeaveDays(startDate: string, endDate: string): number {
     return 0;
   }
 
-  return Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+  let businessDays = 0;
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    const day = cursor.getDay();
+
+    if (day !== 0 && day !== 6) {
+      businessDays += 1;
+    }
+
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return businessDays;
 }
 
 export async function createLeaveRequest(

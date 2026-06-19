@@ -29,7 +29,7 @@ import {
   getElapsedMinutes,
   getWorkdayProgressPercent,
 } from '../utils/timeUtils';
-import { getDateKey, getCurrentWeekRange, getPeriodConfig, getDefaultAnchorDate } from '../utils/dateUtils';
+import { getCurrentMonthRange, getCurrentWeekRange, getPeriodConfig, getDefaultAnchorDate } from '../utils/dateUtils';
 import { exportTimesheetReportPdf } from '../utils/reportPdf';
 import { getAuthSession, getDashboardPathByRole, updateAuthSession } from '../utils/storage';
 import './EmployeeDashboard.css';
@@ -118,8 +118,8 @@ function EmployeeWorkspaceDashboard() {
     setAttendanceError('');
 
     try {
-      const now = new Date();
-      const records = await getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
+      const { periodMonth, periodYear } = getCurrentMonthRange(new Date());
+      const records = await getMonthlyAttendance(userID, periodMonth, periodYear);
       const todayRecord = getTodayAttendance(userKey);
       const recentHistory = getAttendanceHistory(userKey, 7);
       const missingRecords = records.filter((record) => record.status === 'Missing Out');
@@ -150,10 +150,8 @@ function EmployeeWorkspaceDashboard() {
 
     const anchorDateObj = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
     const periodConfig = getPeriodConfig(periodType, anchorDateObj);
-    const month = periodConfig.startDate.getMonth() + 1;
-    const year = periodConfig.startDate.getFullYear();
-    const date = getDateKey(periodConfig.startDate);
-
+    const month = 'periodMonth' in periodConfig ? periodConfig.periodMonth : periodConfig.startDate.getMonth() + 1;
+    const year = 'periodYear' in periodConfig ? periodConfig.periodYear : periodConfig.startDate.getFullYear();
     try {
       const nextData = await getMonthlyTimesheetPeriodData({
         userID,
@@ -287,6 +285,13 @@ function EmployeeWorkspaceDashboard() {
       return { allowed: false, reason: 'Đang tải bảng công...' };
     }
 
+    if (periodType === 'week') {
+      return {
+        allowed: false,
+        reason: 'Tuần này chỉ là chế độ xem. Vui lòng chọn Tháng này để gửi kỳ công 17-16.',
+      };
+    }
+
     const summary = timesheetData.summary as any; // Cast to access MonthlyTimesheetData fields
     
     if (summary?.status === 'Approved') {
@@ -313,7 +318,7 @@ function EmployeeWorkspaceDashboard() {
     );
 
     return canSubmitTimesheet(timesheetData.rows, periodCorrections, timesheetData.summary);
-  }, [timesheetData]);
+  }, [periodType, timesheetData]);
 
   const displayRows = useMemo(() => {
     if (!timesheetData) return [];
@@ -496,15 +501,19 @@ function EmployeeWorkspaceDashboard() {
 
   const handleSubmitCorrection = async (formData) => {
     try {
-      const attendanceRow = timesheetData?.rows.find((row) => row.date === formData.date) || null;
+      const attendanceRow = timesheetData?.rows.find((row) => row.id === selectedRow?.id || row.date === formData.date) || null;
 
       if (!attendanceRow?.id) {
         throw new Error('Không tìm thấy bản ghi cần chỉnh sửa.');
       }
 
+      if (!attendanceRow.monthlyTimesheetID) {
+        throw new Error('Bản ghi chấm công chưa có mã monthly timesheet.');
+      }
+
       await createCorrectionRequest({
         userID: session.userID || session.id,
-        monthlyTimesheetID: timesheetData.summary.id,
+        monthlyTimesheetID: attendanceRow.monthlyTimesheetID,
         userEmail: session.email,
         attendanceId: attendanceRow.id,
         date: formData.date,
@@ -527,6 +536,14 @@ function EmployeeWorkspaceDashboard() {
   };
 
   const handleSubmitTimesheet = async () => {
+    if (periodType === 'week') {
+      setTimesheetFeedback({
+        type: 'danger',
+        message: 'Tuần này chỉ là chế độ xem. Vui lòng chọn Tháng này để gửi kỳ công 17-16.',
+      });
+      return;
+    }
+
     if (!timesheetData?.summary?.id) {
       setTimesheetFeedback({ type: 'danger', message: 'Không tìm thấy bảng công để gửi xác nhận.' });
       return;

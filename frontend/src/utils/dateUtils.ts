@@ -47,6 +47,7 @@ export function getDateKey(date = new Date()) {
 
 export function getDefaultAnchorDate() {
   const now = new Date();
+  return getDateKey(now);
   const d = now.getDate();
   // Nếu ngày hiện tại từ 17 đến 23, mặc định hiển thị bảng công kỳ trước (để nộp)
   if (d >= 17 && d <= 23) {

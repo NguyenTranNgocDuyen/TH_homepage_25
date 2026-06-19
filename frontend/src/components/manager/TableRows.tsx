@@ -110,8 +110,10 @@ export const TimesheetRow = React.memo(({
       <div className="min-w-0 px-3 py-4 text-sm text-slate-600 font-medium truncate" title={departmentName}>{departmentName}</div>
       <div className="min-w-0 px-3 py-4">
         <div className="flex flex-col gap-0.5">
-          <strong className="text-sm text-slate-800 font-bold truncate">{formatDate(timesheet.workDate)}</strong>
-          <span className="text-[11px] text-slate-400 font-medium truncate">{timesheet.periodLabel}</span>
+          <strong className="text-sm text-slate-800 font-bold truncate">{timesheet.periodLabel || formatDate(timesheet.workDate)}</strong>
+          <span className="text-[11px] text-slate-400 font-medium truncate">
+            {timesheet.workDate ? `Cập nhật đến ${formatDate(timesheet.workDate)}` : '--'}
+          </span>
         </div>
       </div>
       <div className="min-w-0 px-2 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">{timesheet.checkIn || '--'}</div>

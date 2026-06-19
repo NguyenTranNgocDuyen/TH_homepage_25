@@ -51,7 +51,7 @@ export function buildEmployeeFromLeaveRequest(request: any) {
     email: request.employeeEmail || sender.email || '',
     departmentId,
     departmentName: sender.departmentName || '',
-    title: 'Nhan vien',
+    title: 'Nhân viên',
     role: 'employee',
     status: sender.isActive === false ? 'Inactive' : 'Active',
     isActive: sender.isActive !== false,
@@ -80,7 +80,7 @@ export function buildEmployeeFromCorrectionRequest(request: any) {
     email: employee.email || request.userEmail || '',
     departmentId: employee.departmentID || employee.departmentId || '',
     departmentName: employee.departmentName || '',
-    title: 'Nhan vien',
+    title: 'Nhân viên',
     role: 'employee',
     status: employee.isActive === false ? 'Inactive' : 'Active',
     isActive: employee.isActive !== false,
@@ -159,15 +159,15 @@ export function cloneTimesheet(timesheet: any) {
 
 export function exportCsv(rows: any[], employees: any[], departments: any[], filters: any) {
   const headers = [
-    'Ma bang cong',
-    'Nhan vien',
-    'Phong ban',
-    'Ngay',
+    'Mã bảng công',
+    'Nhân viên',
+    'Phòng ban',
+    'Ngày',
     'Check-in',
     'Check-out',
-    'Tong gio',
-    'Trang thai',
-    'Canh bao',
+    'Tổng giờ',
+    'Trạng thái',
+    'Cảnh báo',
   ];
 
   const csvRows = rows.map((timesheet) => {

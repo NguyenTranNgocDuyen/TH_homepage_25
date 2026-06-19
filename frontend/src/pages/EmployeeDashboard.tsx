@@ -25,6 +25,7 @@ import {
   getElapsedMinutes,
   getWorkdayProgressPercent,
 } from '../utils/timeUtils';
+import { getCurrentMonthRange } from '../utils/dateUtils';
 import '../styles/attendance.css';
 import {
   FiBell,
@@ -74,7 +75,7 @@ const stats = [
   },
   {
     icon: FiTarget,
-    title: 'Tong gio hom nay',
+    title: 'Tổng giờ hôm nay',
     value: '7.5h',
     note: 'Tien do dat 74% muc tieu ngay',
   },
@@ -295,7 +296,7 @@ function FixedEmployeeDashboard() {
                   <span>Ngay</span>
                   <span>Check-in</span>
                   <span>Check-out</span>
-                  <span>Tong gio</span>
+                  <span>Tổng giờ</span>
                   <span>Trang thai</span>
                 </div>
 
@@ -597,7 +598,7 @@ function FixedEmployeeDashboard() {
                       <span>Ngay</span>
                       <span>Check-in</span>
                       <span>Check-out</span>
-                      <span>Tong gio</span>
+                      <span>Tổng giờ</span>
                       <span>Trang thai</span>
                     </div>
 
@@ -866,8 +867,8 @@ function RealtimeEmployeeDashboard() {
     setAttendanceError('');
 
     try {
-      const now = new Date();
-      const records = await getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
+      const { periodMonth, periodYear } = getCurrentMonthRange(new Date());
+      const records = await getMonthlyAttendance(userID, periodMonth, periodYear);
       const todayRecord = getTodayAttendance(userKey);
       const recentHistory = getAttendanceHistory(userKey, 7);
       const missingRecords = records.filter((record) => record.status === 'Missing Out');
@@ -962,8 +963,8 @@ function RealtimeEmployeeDashboard() {
       setFeedback({
         type: updatedRecord.hasIpWarning ? 'warning' : 'success',
         message: updatedRecord.hasIpWarning
-          ? 'Check-out thanh cong. IP thay doi bat thuong, quan ly se xem xet.'
-          : 'Check-out thanh cong. Tong gio lam da duoc tinh toan.',
+          ? 'Check-out thành công. IP thay đổi bất thường, quản lý sẽ xem xét.'
+          : 'Check-out thành công. Tổng giờ làm đã được tính toán.',
       });
     } catch (error) {
       setFeedback({
@@ -1182,7 +1183,7 @@ function RealtimeEmployeeDashboard() {
                   });
                 }}
               >
-                Tai lai du lieu
+                Tải lại dữ liệu
               </button>
 
               <button

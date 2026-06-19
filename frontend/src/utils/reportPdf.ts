@@ -35,7 +35,7 @@ export function exportTimesheetReportPdf({
   }
 
   contentWindow.document.open();
-  contentWindow.document.write(buildTimesheetReportHtml({ title, filters, rows, summary }));
+  contentWindow.document.write(buildTimesheetReportHtml({ title, filters, rows, summary, filterNames }));
   contentWindow.document.close();
 
   contentWindow.focus();
@@ -82,36 +82,36 @@ function buildTimesheetReportHtml({
 </head>
 <body>
   <h1>${escapeHtml(title)}</h1>
-  <p>Da tao luc ${escapeHtml(generatedAt)}</p>
+  <p>Đã tạo lúc ${escapeHtml(generatedAt)}</p>
   <section class="meta">
-    <div class="box"><span>Tu ngay</span><strong>${escapeHtml(filters.fromDate || '--')}</strong></div>
-    <div class="box"><span>Den ngay</span><strong>${escapeHtml(filters.toDate || '--')}</strong></div>
-    <div class="box"><span>Nhan vien</span><strong>${escapeHtml(filterNames?.employeeName || (filters.employeeId === 'all' ? 'Tat ca nhan vien' : filters.employeeId) || 'Tat ca nhan vien')}</strong></div>
-    <div class="box"><span>Phong ban</span><strong>${escapeHtml(filterNames?.departmentName || (filters.departmentId === 'all' ? 'Tat ca phong ban' : filters.departmentId) || 'Tat ca phong ban')}</strong></div>
-    <div class="box"><span>Trang thai</span><strong>${escapeHtml(filters.status === 'all' ? 'Tat ca trang thai' : (filters.status || 'Tat ca trang thai'))}</strong></div>
+    <div class="box"><span>Từ ngày</span><strong>${escapeHtml(filters.fromDate || '--')}</strong></div>
+    <div class="box"><span>Đến ngày</span><strong>${escapeHtml(filters.toDate || '--')}</strong></div>
+    <div class="box"><span>Nhân viên</span><strong>${escapeHtml(filterNames?.employeeName || (filters.employeeId === 'all' ? 'Tất cả nhân viên' : filters.employeeId) || 'Tất cả nhân viên')}</strong></div>
+    <div class="box"><span>Phòng ban</span><strong>${escapeHtml(filterNames?.departmentName || (filters.departmentId === 'all' ? 'Tất cả phòng ban' : filters.departmentId) || 'Tất cả phòng ban')}</strong></div>
+    <div class="box"><span>Trạng thái</span><strong>${escapeHtml(formatStatusLabel(filters.status === 'all' ? 'Tất cả trạng thái' : (filters.status || 'Tất cả trạng thái')))}</strong></div>
   </section>
   <section class="summary">
-    <div class="box"><span>Tong dong</span><strong>${summary.totalRecords}</strong></div>
-    <div class="box"><span>Nhan vien</span><strong>${summary.totalEmployees}</strong></div>
-    <div class="box"><span>Tong gio</span><strong>${formatHours(summary.totalHours)}</strong></div>
-    <div class="box"><span>Canh bao</span><strong>${summary.warningRecords}</strong></div>
+    <div class="box"><span>Tổng dòng</span><strong>${summary.totalRecords}</strong></div>
+    <div class="box"><span>Nhân viên</span><strong>${summary.totalEmployees}</strong></div>
+    <div class="box"><span>Tổng giờ</span><strong>${formatHours(summary.totalHours)}</strong></div>
+    <div class="box"><span>Cảnh báo</span><strong>${summary.warningRecords}</strong></div>
   </section>
   <table>
     <thead>
       <tr>
-        <th>Ma</th>
-        <th>Nhan vien</th>
-        <th>Phong ban</th>
-        <th>Ngay</th>
+        <th>Mã</th>
+        <th>Nhân viên</th>
+        <th>Phòng ban</th>
+        <th>Ngày</th>
         <th>In</th>
         <th>Out</th>
-        <th class="right">Tong gio</th>
-        <th>Trang thai</th>
-        <th>Canh bao</th>
+        <th class="right">Tổng giờ</th>
+        <th>Trạng thái</th>
+        <th>Cảnh báo</th>
       </tr>
     </thead>
     <tbody>
-      ${rows.length ? rows.map(renderRow).join('') : '<tr><td colspan="9" class="muted">Khong co du lieu timesheet phu hop.</td></tr>'}
+      ${rows.length ? rows.map(renderRow).join('') : '<tr><td colspan="9" class="muted">Không có dữ liệu timesheet phù hợp.</td></tr>'}
     </tbody>
   </table>
 </body>
@@ -129,7 +129,7 @@ function renderRow(row: Timesheet): string {
     <td>${escapeHtml(row.checkIn || '--')}</td>
     <td>${escapeHtml(row.checkOut || '--')}</td>
     <td class="right">${formatHours(row.totalHours || 0)}</td>
-    <td>${escapeHtml(row.status || '--')}</td>
+    <td>${escapeHtml(formatStatusLabel(row.status || '--'))}</td>
     <td>${escapeHtml(warnings)}</td>
   </tr>`;
 }
@@ -142,12 +142,12 @@ function getWarningLabels(warnings: unknown): string[] {
   return warnings
     .map((warning) => {
       if (typeof warning === 'string') {
-        return warning;
+        return formatWarningLabel(warning);
       }
 
       if (warning && typeof warning === 'object') {
         const value = warning as { label?: string; code?: string };
-        return value.label || value.code || '';
+        return formatWarningLabel(value.label || value.code || '');
       }
 
       return '';
@@ -157,6 +157,37 @@ function getWarningLabels(warnings: unknown): string[] {
 
 function formatHours(value: number): string {
   return `${Number(value || 0).toFixed(1)}h`;
+}
+
+function formatStatusLabel(status: string): string {
+  switch (status) {
+    case 'Pending':
+      return 'Chờ duyệt';
+    case 'Submitted':
+      return 'Đã gửi';
+    case 'Approved':
+      return 'Đã duyệt';
+    case 'Rejected':
+      return 'Từ chối';
+    default:
+      return status;
+  }
+}
+
+function formatWarningLabel(warning: string): string {
+  switch (warning) {
+    case 'Missing Out':
+      return 'Thiếu check-out';
+    case 'Under 2h':
+    case 'Duoi 2h':
+      return 'Dưới 2h';
+    case 'Warning':
+      return 'Cảnh báo';
+    case 'Rejected Entry':
+      return 'Bản ghi bị từ chối';
+    default:
+      return warning;
+  }
 }
 
 function escapeHtml(value: unknown): string {

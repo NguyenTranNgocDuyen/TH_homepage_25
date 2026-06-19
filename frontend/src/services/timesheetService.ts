@@ -19,6 +19,8 @@ import {
 } from './correctionService';
 import httpClient from '../utils/httpClient';
 import {
+  getCurrentMonthRange,
+  getCurrentWeekRange,
   getPeriodConfig,
   isDateWithinRange,
   isEarlyOut,
@@ -346,14 +348,25 @@ function findCachedMonthlyTimesheet(
   return monthlyTimesheetCache.get(getMonthlyCacheKey(userKey, month, year)) || null;
 }
 
+function findCachedMonthlyTimesheetById(monthlyTimesheetID?: string): MonthlyTimesheetData | null {
+  if (!monthlyTimesheetID) {
+    return null;
+  }
+
+  return [...monthlyTimesheetCache.values()].find(
+    (item) => item.monthlyTimesheetID === monthlyTimesheetID,
+  ) || null;
+}
+
 function findCachedSummaryForPeriod(
   userKey: string,
   periodType: PeriodType,
   anchorDateInput: Date | string,
 ): MonthlyTimesheetData | null {
   const anchorDate = typeof anchorDateInput === 'string' ? new Date(anchorDateInput) : anchorDateInput;
-  const month = anchorDate.getMonth() + 1;
-  const year = anchorDate.getFullYear();
+  const periodConfig = getPeriodConfig(periodType, anchorDate);
+  const month = 'periodMonth' in periodConfig ? periodConfig.periodMonth : anchorDate.getMonth() + 1;
+  const year = 'periodYear' in periodConfig ? periodConfig.periodYear : anchorDate.getFullYear();
 
   return (
     findCachedMonthlyTimesheet(userKey, month, year) ||
@@ -372,7 +385,7 @@ function applySummaryToRows(rows: TimesheetRow[], summary: TimesheetSummary): Ti
         ? summary.status
         : row.status === 'Working'
           ? 'Open'
-          : 'Draft',
+          : row.timesheetStatus || 'Draft',
   }));
 }
 
@@ -409,6 +422,53 @@ function mergeMonthlySummaryWithPeriod(
     periodKey: getPeriodKey(periodType, periodConfig),
     attendanceIds,
   };
+}
+
+function getMonthlyPeriodsInRange(startDate: Date, endDate: Date): Array<{ month: number; year: number }> {
+  const periods = new Map<string, { month: number; year: number }>();
+  const cursor = new Date(startDate);
+  cursor.setHours(0, 0, 0, 0);
+
+  while (cursor <= endDate) {
+    const period = getCurrentMonthRange(cursor);
+    const key = `${period.periodYear}-${period.periodMonth}`;
+    periods.set(key, {
+      month: period.periodMonth,
+      year: period.periodYear,
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return [...periods.values()];
+}
+
+async function ensureMonthlyTimesheet(
+  userID: string,
+  userEmail: string,
+  month: number,
+  year: number,
+  createIfMissing: boolean,
+): Promise<MonthlyTimesheetData> {
+  let monthlyTimesheet: MonthlyTimesheetData;
+
+  try {
+    monthlyTimesheet = await getMonthlyTimesheet(userID, month, year);
+  } catch (error) {
+    if ((error as AppError).code !== 'TIMESHEET_NOT_FOUND' || !createIfMissing) {
+      throw error;
+    }
+
+    monthlyTimesheet = await createMonthlyTimesheet(userID, month, year);
+  }
+
+  if (userEmail && userEmail !== userID) {
+    monthlyTimesheetCache.set(getMonthlyCacheKey(userEmail, month, year), {
+      ...monthlyTimesheet,
+      userEmail,
+    });
+  }
+
+  return monthlyTimesheet;
 }
 
 function toWarningCode(label: string): string {
@@ -782,21 +842,24 @@ export function getTimesheetByPeriod(
   );
 
   const corrections = getCorrectionsByUser(userEmail);
-  const monthlySummary = getTimesheetStatus(userEmail, periodType, anchorDate);
+  const monthlySummary = periodType === 'week'
+    ? null
+    : getTimesheetStatus(userEmail, periodType, anchorDate);
 
   const rows = attendanceRecords.map((record): TimesheetRow => {
     const correction = getCorrectionByAttendanceId(record.id);
     const warnings = getAttendanceWarnings(record, correction);
+    const rowSummary = findCachedMonthlyTimesheetById(record.monthlyTimesheetID) || monthlySummary;
 
     return {
       ...record,
       warnings,
       correction,
       timesheetStatus:
-        monthlySummary?.status === 'Submitted' ||
-        monthlySummary?.status === 'Approved' ||
-        monthlySummary?.status === 'Rejected'
-          ? monthlySummary.status
+        rowSummary?.status === 'Submitted' ||
+        rowSummary?.status === 'Approved' ||
+        rowSummary?.status === 'Rejected'
+          ? rowSummary.status
           : record.status === 'Working'
             ? 'Open'
             : 'Draft',
@@ -869,25 +932,22 @@ export async function getMonthlyTimesheetPeriodData({
     anchorDate = new Date(anchorDate);
   }
 
-  let monthlyTimesheet: MonthlyTimesheetData;
+  if (periodType === 'week') {
+    const weekPeriod = getCurrentWeekRange(anchorDate);
+    const monthlyPeriods = getMonthlyPeriodsInRange(weekPeriod.startDate, weekPeriod.endDate);
 
-  try {
-    monthlyTimesheet = await getMonthlyTimesheet(userID, month, year);
-  } catch (error) {
-    if ((error as AppError).code !== 'TIMESHEET_NOT_FOUND' || !createIfMissing) {
-      throw error;
-    }
+    await Promise.all(
+      monthlyPeriods.map(async (period) => {
+        await ensureMonthlyTimesheet(userID, userEmail, period.month, period.year, createIfMissing);
+        await getMonthlyAttendance(userID, period.month, period.year);
+      }),
+    );
+    await loadCorrectionsByUser(userID, userEmail || userID);
 
-    monthlyTimesheet = await createMonthlyTimesheet(userID, month, year);
+    return getTimesheetByPeriod(userEmail || userID, 'week', anchorDate);
   }
 
-  if (userEmail && userEmail !== userID) {
-    monthlyTimesheetCache.set(getMonthlyCacheKey(userEmail, month, year), {
-      ...monthlyTimesheet,
-      userEmail,
-    });
-  }
-
+  await ensureMonthlyTimesheet(userID, userEmail, month, year, createIfMissing);
   await getMonthlyAttendance(userID, month, year);
   await loadCorrectionsByUser(userID, userEmail || userID);
   const data = getTimesheetByPeriod(userEmail || userID, periodType, anchorDate);
@@ -1138,6 +1198,7 @@ function normalizeReviewEntry(entry: BackendTimesheetEntry, userID: string): Att
 
   return {
     id: entry.timesheetEntryID || entry.id || `${userID}-${date}-${checkInIso || 'empty'}`,
+    monthlyTimesheetID: entry.monthlyTimesheetID,
     userEmail: userID,
     date,
     checkInTime: formatNullableTime(checkInIso),

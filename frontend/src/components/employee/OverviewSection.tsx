@@ -1,4 +1,5 @@
 import { FiAlertCircle, FiBell, FiCheckCircle } from 'react-icons/fi';
+import { formatNotificationContent } from '../../utils/notificationText';
 import { formatHours } from '../../utils/timeUtils';
 
 function OverviewSection({ overviewStats, todaySession, quickTasks, notifications, onNavigate }) {
@@ -100,7 +101,7 @@ function OverviewSection({ overviewStats, todaySession, quickTasks, notification
               {notifications && notifications.length > 0 ? notifications.map((item) => (
                 <div key={item.id} className="dashboard-list__item dashboard-list__item--simple">
                   <FiBell />
-                  <span>{item.content}</span>
+                  <span>{formatNotificationContent(item.content)}</span>
                 </div>
               )) : (
                 <div className="dashboard-list__item dashboard-list__item--simple">

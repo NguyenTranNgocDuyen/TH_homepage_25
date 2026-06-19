@@ -128,7 +128,7 @@ export default function HRSystemLogs() {
           <h1>Nhật ký hệ thống</h1>
           <p>Lịch sử 200 thao tác gần nhất được hệ thống ghi nhận. Click vào một dòng để đánh dấu bất thường.</p>
         </div>
-        <div className="employee-section__actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="employee-section__actions hr-system-log-filters" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <input 
             type="date" 
             className="dashboard-input" 
@@ -160,8 +160,8 @@ export default function HRSystemLogs() {
 
       <section className="dashboard-panel">
         <div className="dashboard-panel__content p-0">
-          <div className="dashboard-table-container">
-            <table className="dashboard-table">
+          <div className="dashboard-table-container hr-system-log-scroll">
+            <table className="hr-system-log-table">
               <thead>
                 <tr>
                   <th>Người dùng</th>
@@ -195,8 +195,8 @@ export default function HRSystemLogs() {
                         onClick={() => toggleAnomalous(log.logID)}
                       >
                         {/* 1. Người dùng */}
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <td data-label="Người dùng">
+                          <div className="hr-system-log-user">
                             <div
                               style={{
                                 width: '24px',
@@ -221,12 +221,12 @@ export default function HRSystemLogs() {
                         </td>
 
                         {/* 2. Hành động + Route (Entity) */}
-                        <td style={{ maxWidth: '300px' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <td data-label="Hành động" className="hr-system-log-route">
+                          <div className="hr-system-log-action">
                             <span style={{ fontWeight: 600, color: getActionColor(log.action), fontSize: '0.8rem', textTransform: 'uppercase' }}>
                               {log.action}
                             </span>
-                            <span style={{ fontWeight: 500, wordBreak: 'break-all', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                            <span style={{ fontWeight: 500, wordBreak: 'normal', overflowWrap: 'anywhere', fontSize: '0.9rem', lineHeight: '1.4' }}>
                               {log.entity}
                             </span>
                           </div>
@@ -238,7 +238,7 @@ export default function HRSystemLogs() {
                         </td>
 
                         {/* 3. Trạng thái (Màu chữ xanh/đỏ) */}
-                        <td style={{ maxWidth: '250px' }}>
+                        <td data-label="Trạng thái">
                           <div style={{ color: statusColor, fontWeight: 500 }}>
                             <strong style={{ fontSize: '1.1em', marginRight: '4px' }}>
                               {log.statusCode || '???'}
@@ -250,7 +250,7 @@ export default function HRSystemLogs() {
                         </td>
 
                         {/* 4. Thời gian */}
-                        <td style={{ whiteSpace: 'nowrap', fontSize: '0.85rem', color: '#64748b' }}>
+                        <td data-label="Thời gian" className="hr-system-log-time">
                           {new Date(log.createdAt).toLocaleString('vi-VN')}
                         </td>
                       </tr>

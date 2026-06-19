@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { FiMenu, FiSearch } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import NotificationDropdown from './NotificationDropdown';
 import { getAuthSession, getDashboardPathByRole } from '../utils/storage';
 import { API_CONFIG } from '../config/api';
 
-function WorkspaceTopbar() {
+function WorkspaceTopbar({ onOpenMenu }) {
   const [session, setSession] = useState(() => getAuthSession());
   const navigate = useNavigate();
 
@@ -31,6 +31,15 @@ function WorkspaceTopbar() {
   return (
     <header className="topbar" role="banner">
       <div className="topbar__start">
+        <button
+          type="button"
+          className="topbar__menu-button"
+          aria-label="Mở menu điều hướng"
+          onClick={onOpenMenu}
+        >
+          <FiMenu />
+        </button>
+
         <label className="topbar__search" htmlFor="workspace-search">
           <FiSearch />
           <input
@@ -65,9 +74,9 @@ function WorkspaceTopbar() {
             )}
           </div>
           <div className="topbar__profile-copy">
-            <strong>{session?.name || 'Khach truy cap'}</strong>
+            <strong>{session?.name || 'Khách truy cập'}</strong>
             <span>
-              {session?.role ? getRoleSubtitle(session) : 'Xin chao, chuc ban mot ngay lam viec hieu qua'}
+              {session?.role ? getRoleSubtitle(session) : 'Xin chào, chúc bạn một ngày làm việc hiệu quả'}
             </span>
           </div>
         </div>
@@ -78,28 +87,28 @@ function WorkspaceTopbar() {
 
 function getSearchPlaceholder(role) {
   if (role === 'manager') {
-    return 'Tim nhan vien, bang cong, don nghi phep, thong bao...';
+    return 'Tìm nhân viên, bảng công, đơn nghỉ phép, thông báo...';
   }
 
   if (isHrWorkspaceRole(role)) {
-    return 'Tim nhan su, chinh sach, bao cao, thong bao...';
+    return 'Tìm nhân sự, chính sách, báo cáo, thông báo...';
   }
 
-  return 'Tim kiem bang cong, don nghi, thong bao...';
+  return 'Tìm kiếm bảng công, đơn nghỉ, thông báo...';
 }
 
 function getRoleSubtitle(session) {
   switch (session.role) {
     case 'manager':
-      return 'Vai tro: Manager | Pham vi: nhan su truc thuoc';
+      return 'Vai trò: Manager | Phạm vi: nhân sự trực thuộc';
     case 'hr':
-      return 'Vai tro: HR | Quan tri nhan su va chinh sach';
+      return 'Vai trò: HR | Quản trị nhân sự và chính sách';
     case 'admin':
-      return 'Vai tro: Admin | Quan tri nhan su va chinh sach';
+      return 'Vai trò: Admin | Quản trị nhân sự và chính sách';
     case 'employee':
-      return `Vai tro: Employee | Hinh thuc dang nhap: ${session.provider || 'password'}`;
+      return `Vai trò: Employee | Hình thức đăng nhập: ${session.provider || 'password'}`;
     default:
-      return `Vai tro: ${session.role}`;
+      return `Vai trò: ${session.role}`;
   }
 }
 

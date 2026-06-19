@@ -681,6 +681,7 @@ describe('business rules', () => {
             .mockResolvedValue({ typeLeaveID: 'type-1', hasSalary: 1 }),
         },
         leaveApplication: {
+          findFirst: jest.fn().mockResolvedValue(null),
           create: jest
             .fn()
             .mockResolvedValue({ leaveApplicationID: 'leave-1', duration: 2 }),
@@ -735,6 +736,7 @@ describe('business rules', () => {
           ]),
         },
         leaveApplication: {
+          findFirst: jest.fn().mockResolvedValue(null),
           create: jest.fn().mockResolvedValue({
             leaveApplicationID: 'leave-conflict',
             duration: 1,

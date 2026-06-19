@@ -76,10 +76,8 @@ function TimesheetWorkspacePage() {
 
     const anchorDateObj = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
     const periodConfig = getPeriodConfig(periodType, anchorDateObj);
-    const month = periodConfig.startDate.getMonth() + 1;
-    const year = periodConfig.startDate.getFullYear();
-    const date = getDateKey(periodConfig.startDate);
-
+    const month = 'periodMonth' in periodConfig ? periodConfig.periodMonth : periodConfig.startDate.getMonth() + 1;
+    const year = 'periodYear' in periodConfig ? periodConfig.periodYear : periodConfig.startDate.getFullYear();
     setIsLoading(true);
 
     try {
@@ -88,7 +86,7 @@ function TimesheetWorkspacePage() {
         userEmail,
         month,
         year,
-        periodType: periodType === 'week' ? 'week' : 'month',
+        periodType,
         anchorDate: anchorDateObj,
         createIfMissing: true,
       });
@@ -111,7 +109,14 @@ function TimesheetWorkspacePage() {
 
   const submitState = useMemo(() => {
     if (!timesheetData) {
-      return { allowed: false, reason: isLoading ? 'Dang tai bang cong...' : 'Chua co du lieu bang cong.' };
+      return { allowed: false, reason: isLoading ? 'Đang tải bảng công...' : 'Chưa có dữ liệu bảng công.' };
+    }
+
+    if (periodType === 'week') {
+      return {
+        allowed: false,
+        reason: 'Tuan nay chi la che do xem. Vui long chon Thang nay de gui ky cong 17-16.',
+      };
     }
 
     const periodCorrections = timesheetData.corrections.filter(
@@ -121,7 +126,7 @@ function TimesheetWorkspacePage() {
     );
 
     return canSubmitTimesheet(timesheetData.rows, periodCorrections, timesheetData.summary);
-  }, [isLoading, timesheetData]);
+  }, [isLoading, periodType, timesheetData]);
 
   const displayRows = useMemo(() => {
     if (!timesheetData) return [];
@@ -140,15 +145,19 @@ function TimesheetWorkspacePage() {
 
   const handleCorrectionSubmit = async (formData) => {
     try {
-      const attendanceRow = timesheetData?.rows.find((row) => row.date === formData.date) || null;
+      const attendanceRow = timesheetData?.rows.find((row) => row.id === selectedRow?.id || row.date === formData.date) || null;
 
       if (!attendanceRow?.id) {
         throw new Error('Không tìm thấy bản ghi chấm công để tạo yêu cầu.');
       }
 
+      if (!attendanceRow.monthlyTimesheetID) {
+        throw new Error('Ban ghi cham cong chua co ma monthly timesheet.');
+      }
+
       await createCorrectionRequest({
         userID: session.userID || session.id,
-        monthlyTimesheetID: timesheetData.summary.id,
+        monthlyTimesheetID: attendanceRow.monthlyTimesheetID,
         userEmail: session.email,
         attendanceId: attendanceRow.id,
         date: formData.date,
@@ -171,6 +180,11 @@ function TimesheetWorkspacePage() {
   };
 
   const handleSubmitTimesheet = async () => {
+    if (periodType === 'week') {
+      setFeedback('Tuan nay chi la che do xem. Vui long chon Thang nay de gui ky cong 17-16.');
+      return;
+    }
+
     if (!timesheetData?.summary?.id) {
       return;
     }
@@ -194,7 +208,7 @@ function TimesheetWorkspacePage() {
         <section className="dashboard-panel timesheet-page__hero">
           <div>
             <span className="dashboard-panel__eyebrow">Timesheet Management</span>
-            <h1>Dang tai bang cong tu API</h1>
+            <h1>Đang tải bảng công từ API</h1>
             <p>He thong dang dong bo monthly timesheet va du lieu cham cong cua ban.</p>
           </div>
         </section>
@@ -217,12 +231,16 @@ function TimesheetWorkspacePage() {
             onClick={() => void loadTimesheet({ showSuccess: true })}
           >
             <FiRefreshCw className={isLoading ? 'animate-spin' : ''} />
-            Tai lai
+            Tải lại
           </button>
         </section>
       </div>
     );
   }
+
+  const submitTitle = periodType === 'week'
+    ? 'Gui bang cong theo ky thang'
+    : `Gửi bảng công Tháng ${new Date(timesheetData.period.startDate).getMonth() + 1}/${new Date(timesheetData.period.startDate).getFullYear()}`;
 
   return (
     <div className="dashboard-page timesheet-page">
@@ -247,7 +265,7 @@ function TimesheetWorkspacePage() {
             disabled={isLoading}
           >
             <FiRefreshCw className={isLoading ? 'animate-spin' : ''} />
-            {isLoading ? 'Dang tai...' : 'Tai lai'}
+            {isLoading ? 'Đang tải...' : 'Tải lại'}
           </button>
           <div
             className={`dashboard-status-badge ${
@@ -355,7 +373,7 @@ function TimesheetWorkspacePage() {
 
         <aside className="dashboard-content__side">
           <SubmitTimesheetPanel
-            title={`Gửi bảng công Tháng ${new Date(timesheetData.period.startDate).getMonth() + 1}/${new Date(timesheetData.period.startDate).getFullYear()}`}
+            title={submitTitle}
             stats={timesheetData.stats}
             summaryStatus={timesheetData.summary.status}
             submitState={{

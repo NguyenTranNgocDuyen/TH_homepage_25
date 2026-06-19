@@ -27,7 +27,7 @@ const ManagerOverview: React.FC<ManagerOverviewProps> = ({
   const warningTimesheets = timesheets.filter((t) => t.warnings?.length > 0);
   const primaryDepartment = departments[0]?.name || 'Phòng ban trực thuộc';
 
-  const getEmployeeName = (empId: string) => employees.find((e) => e.id === empId)?.fullName || 'Nhan vien';
+  const getEmployeeName = (empId: string) => employees.find((e) => e.id === empId)?.fullName || 'Nhân viên';
 
   const todayTasks = [
     ...pendingTimesheets.map((t) => ({
@@ -77,7 +77,7 @@ const ManagerOverview: React.FC<ManagerOverviewProps> = ({
       icon: FiAlertTriangle,
       label: 'Cảnh báo bất thường',
       value: warningTimesheets.length,
-      note: 'Miss Out, đi muộn...',
+      note: 'Thiếu check-out, đi muộn...',
       accent: 'rose' as const,
       sectionKey: 'timesheet-reports',
     },
@@ -160,9 +160,9 @@ const ManagerOverview: React.FC<ManagerOverviewProps> = ({
             </div>
             <div className="flex flex-col gap-4">
               {[
-                { label: 'Manager hiện tại', value: currentManager.name },
+                { label: 'Quản lý hiện tại', value: currentManager.name },
                 { label: 'Phòng ban', value: primaryDepartment },
-                { label: 'ID nhân viên', value: currentManager.managedEmployeeIds.join(', ') || 'Theo phong ban' },
+                { label: 'Nhân viên quản lý', value: currentManager.managedEmployeeIds.join(', ') || 'Theo phòng ban' },
               ].map((item) => (
                 <div key={item.label} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-1">
                   <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{item.label}</span>

@@ -83,7 +83,7 @@ function ManagerTimesheetReport({
       } catch (error: any) {
         if (isMounted) {
           setReportData({ filters, rows: [], summary: EMPTY_SUMMARY });
-          onFeedback('danger', error?.message || 'Khong the tai bao cao timesheet tu API.');
+          onFeedback('danger', error?.message || 'Không thể tải báo cáo timesheet từ API.');
         }
       } finally {
         if (isMounted) {
@@ -107,11 +107,11 @@ function ManagerTimesheetReport({
 
   const enrichedDepartments = useMemo(() => {
     return departments.map(d => {
-      if (d.name !== 'Phong ban hien tai') return d;
+      if (d.name !== 'Phong ban hien tai' && d.name !== 'Phòng ban hiện tại') return d;
       const realName = reportData?.rows.find(r => r.departmentId === d.id && r.departmentName)?.departmentName;
       return {
         ...d,
-        name: realName || d.name
+        name: realName || 'Phòng ban hiện tại'
       };
     });
   }, [departments, reportData?.rows]);
@@ -126,18 +126,18 @@ function ManagerTimesheetReport({
 
   const handleExportPdf = () => {
     if (previewRows.length === 0) {
-      onFeedback('danger', 'Khong co du lieu de xuat PDF.');
+      onFeedback('danger', 'Không có dữ liệu để xuất PDF.');
       return;
     }
 
     const currentFilters = reportData?.filters || filters;
     const employeeName = currentFilters.employeeId === 'all' 
-      ? 'Tat ca nhan vien' 
+      ? 'Tất cả nhân viên' 
       : employees.find(e => e.id === currentFilters.employeeId)?.fullName || currentFilters.employeeId;
     
     const departmentName = enrichedDepartments.length > 0
       ? enrichedDepartments[0].name
-      : 'Phong ban cua toi';
+      : 'Phòng ban của tôi';
 
     try {
       const exportRows = previewRows.map(row => ({
@@ -147,15 +147,15 @@ function ManagerTimesheetReport({
       }));
 
       exportTimesheetReportPdf({
-        title: 'Bao cao timesheet',
+        title: 'Báo cáo timesheet',
         filters: currentFilters,
         filterNames: { employeeName, departmentName },
         rows: exportRows,
         summary,
       });
-      onFeedback('success', `Da mo ban PDF cho ${previewRows.length} dong timesheet.`);
+      onFeedback('success', `Đã mở bản PDF cho ${previewRows.length} dòng timesheet.`);
     } catch (error: any) {
-      onFeedback('danger', error?.message || 'Khong the xuat PDF.');
+      onFeedback('danger', error?.message || 'Không thể xuất PDF.');
     }
   };
 
@@ -167,82 +167,82 @@ function ManagerTimesheetReport({
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">UC-09</span>
-        <h1 className="text-3xl font-black text-slate-800 m-0">Bao cao timesheet</h1>
-        <p className="text-slate-500 m-0 text-sm max-w-3xl">Du lieu duoc loc truc tiep tu API report theo ngay, nhan vien, phong ban va trang thai.</p>
+        <h1 className="text-3xl font-black text-slate-800 m-0">Báo cáo timesheet</h1>
+        <p className="text-slate-500 m-0 text-sm max-w-3xl">Dữ liệu được lọc trực tiếp từ API report theo ngày, nhân viên, phòng ban và trạng thái.</p>
       </div>
 
       <ManagerFeedback feedback={feedback} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard label="Tong dong" value={summary.totalRecords} />
-        <SummaryCard label="Nhan vien" value={summary.totalEmployees} />
-        <SummaryCard label="Tong gio" value={`${Number(summary.totalHours || 0).toFixed(1)}h`} />
-        <SummaryCard label="Canh bao" value={summary.warningRecords} />
+        <SummaryCard label="Tổng dòng" value={summary.totalRecords} />
+        <SummaryCard label="Nhân viên" value={summary.totalEmployees} />
+        <SummaryCard label="Tổng giờ" value={`${Number(summary.totalHours || 0).toFixed(1)}h`} />
+        <SummaryCard label="Cảnh báo" value={summary.warningRecords} />
       </div>
 
       <div className="p-8 rounded-[32px] bg-white border border-slate-200 shadow-sm flex flex-col gap-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <Field label="Tu ngay">
+          <Field label="Từ ngày">
             <input type="date" name="fromDate" value={filters.fromDate} onChange={handleChange} className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all" />
           </Field>
-          <Field label="Den ngay">
+          <Field label="Đến ngày">
             <input type="date" name="toDate" value={filters.toDate} onChange={handleChange} className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all" />
           </Field>
-          <Field label="Nhan vien">
+          <Field label="Nhân viên">
             <select name="employeeId" value={filters.employeeId} onChange={handleChange} className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
-              <option value="all">Tat ca nhan vien</option>
+              <option value="all">Tất cả nhân viên</option>
               {employees.map((employee) => (
                 <option key={employee.id} value={employee.id}>{employee.fullName}</option>
               ))}
             </select>
           </Field>
-          <Field label="Phong ban">
+          <Field label="Phòng ban">
             <select name="departmentId" value={filters.departmentId} onChange={handleChange} className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
-              {enrichedDepartments.length !== 1 && <option value="all">Phong ban cua toi</option>}
+              {enrichedDepartments.length !== 1 && <option value="all">Phòng ban của tôi</option>}
               {enrichedDepartments.map((department) => (
                 <option key={department.id} value={department.id}>{department.name}</option>
               ))}
             </select>
           </Field>
-          <Field label="Trang thai">
+          <Field label="Trạng thái">
             <select name="status" value={filters.status} onChange={handleChange} className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
-              <option value="all">Tat ca trang thai</option>
-              <option value="Pending">Pending</option>
-              <option value="Submitted">Submitted</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="Pending">Chờ duyệt</option>
+              <option value="Submitted">Đã gửi</option>
+              <option value="Approved">Đã duyệt</option>
+              <option value="Rejected">Từ chối</option>
             </select>
           </Field>
           <div className="flex items-end gap-3 lg:col-span-1 xl:col-span-3">
             <button type="button" onClick={() => setReloadKey((value) => value + 1)} disabled={isLoading} className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-50 text-slate-700 font-black border border-slate-200 hover:bg-slate-100 transition-all">
-              <FiRefreshCw /> Tai lai
+              <FiRefreshCw /> Tải lại
             </button>
             <button type="button" onClick={handleExportPdf} disabled={isLoading || previewRows.length === 0} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-black shadow-lg shadow-blue-600/20 hover:bg-blue-700 disabled:opacity-60 transition-all">
-              <FiDownload /> Xuat PDF
+              <FiDownload /> Xuất PDF
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatusMetric label="Pending" value={summary.pending} />
-          <StatusMetric label="Submitted" value={summary.submitted} />
-          <StatusMetric label="Approved" value={summary.approved} />
-          <StatusMetric label="Rejected" value={summary.rejected} />
+          <StatusMetric label="Chờ duyệt" value={summary.pending} />
+          <StatusMetric label="Đã gửi" value={summary.submitted} />
+          <StatusMetric label="Đã duyệt" value={summary.approved} />
+          <StatusMetric label="Từ chối" value={summary.rejected} />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/30">
           <div className="overflow-x-auto">
             <div className="min-w-[1100px]">
               <div className="flex bg-slate-100/80 border-b border-slate-200">
-                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[110px]">Ma</div>
-                <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[180px]">Nhan vien</div>
-                <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[150px]">Phong ban</div>
-                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[120px]">Ngay</div>
+                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[110px]">Mã</div>
+                <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[180px]">Nhân viên</div>
+                <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[150px]">Phòng ban</div>
+                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[120px]">Ngày</div>
                 <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[80px]">In</div>
                 <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[80px]">Out</div>
-                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[90px]">Tong gio</div>
-                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[100px]">Trang thai</div>
-                <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[150px]">Canh bao</div>
+                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[90px]">Tổng giờ</div>
+                <div className="px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[100px]">Trạng thái</div>
+                <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-500 uppercase tracking-wider min-w-[150px]">Cảnh báo</div>
               </div>
 
               {previewRows.length > 0 ? (
@@ -251,7 +251,7 @@ function ManagerTimesheetReport({
                 </List>
               ) : (
                 <div className="px-4 py-12 text-center text-slate-400 text-sm font-medium italic">
-                  {isLoading ? 'Dang tai bao cao timesheet...' : 'Khong co du lieu phu hop voi bo loc.'}
+                  {isLoading ? 'Đang tải báo cáo timesheet...' : 'Không có dữ liệu phù hợp với bộ lọc.'}
                 </div>
               )}
             </div>

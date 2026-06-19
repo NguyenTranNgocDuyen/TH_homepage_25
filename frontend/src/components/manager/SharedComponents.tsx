@@ -54,15 +54,32 @@ type WarningItem =
     };
 
 function getWarningText(warning: WarningItem): string {
+  const localizeWarning = (value: string) => {
+    switch (value) {
+      case 'Missing Out':
+        return 'Thiếu check-out';
+      case 'Under 2h':
+      case 'Duoi 2h':
+      case 'Dưới 2h':
+        return 'Dưới 2h';
+      case 'Warning':
+        return 'Cảnh báo';
+      case 'Rejected Entry':
+        return 'Bản ghi bị từ chối';
+      default:
+        return value;
+    }
+  };
+
   if (typeof warning === 'string') {
-    return warning;
+    return localizeWarning(warning);
   }
 
-  return warning.label || warning.message || warning.code || 'Canh bao';
+  return localizeWarning(warning.label || warning.message || warning.code || 'Cảnh báo');
 }
 
 export const WarningList: React.FC<{ warnings?: WarningItem[] }> = ({ warnings }) => {
-  if (!warnings || warnings.length === 0) return <span className="text-slate-400">Khong co canh bao</span>;
+  if (!warnings || warnings.length === 0) return <span className="text-slate-400">Không có cảnh báo</span>;
 
   return (
     <div className="flex flex-wrap gap-1.5 items-center">

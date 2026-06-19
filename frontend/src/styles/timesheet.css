@@ -362,9 +362,12 @@
     width: 100%;
   }
 
-  .timesheet-table,
+  .timesheet-table {
+    min-width: 760px;
+  }
+
   .timesheet-table--api {
-    min-width: 0;
+    min-width: 860px;
   }
 }
 

@@ -95,11 +95,11 @@ function HRTimesheetExport({
 
     const currentFilters = reportData?.filters || filters;
     const employeeName = currentFilters.employeeId === 'all' 
-      ? 'Tat ca nhan vien' 
+      ? 'Tất cả nhân viên' 
       : employees.find(e => e.id === currentFilters.employeeId)?.fullName || currentFilters.employeeId;
     
     const departmentName = currentFilters.departmentId === 'all'
-      ? 'Tat ca phong ban'
+      ? 'Tất cả phòng ban'
       : departments.find(d => (d.id || d.departmentID) === currentFilters.departmentId)?.name || departments.find(d => (d.id || d.departmentID) === currentFilters.departmentId)?.departmentName || currentFilters.departmentId;
 
     try {

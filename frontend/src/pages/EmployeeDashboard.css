@@ -2616,35 +2616,386 @@
 }
 
 @media (max-width: 1024px) {
-  .dashboard--sidebar-collapsed .sidebar {
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar {
     width: 100%;
     align-items: stretch;
   }
 
-  .dashboard--sidebar-collapsed .sidebar__header {
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__header {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
   }
 
-  .dashboard--sidebar-collapsed .sidebar__brand-copy,
-  .dashboard--sidebar-collapsed .sidebar__item-copy,
-  .dashboard--sidebar-collapsed .sidebar__footer {
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__brand-copy,
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__item-copy,
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__footer {
     display: block;
   }
 
-  .dashboard--sidebar-collapsed .sidebar__nav {
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__nav {
     justify-items: stretch;
   }
 
-  .dashboard--sidebar-collapsed .sidebar__item,
-  .dashboard--sidebar-collapsed .sidebar__item--button,
-  .dashboard--sidebar-collapsed .sidebar__item--collapsed {
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__item,
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__item--button,
+  .dashboard:not(.dashboard--sidebar-collapsed) .sidebar__item--collapsed {
     width: 100%;
     min-width: 0;
     height: auto;
     min-height: 60px;
     padding: 10px 14px;
     justify-content: flex-start;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar {
+    width: 100%;
+    min-height: auto;
+    height: auto;
+    padding: 14px 16px;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar__header {
+    width: 100%;
+    min-height: 44px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar__brand {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar__brand-copy,
+  .dashboard--sidebar-collapsed .sidebar__item-copy,
+  .dashboard--sidebar-collapsed .sidebar__footer,
+  .dashboard--sidebar-collapsed .sidebar__section-label,
+  .dashboard--sidebar-collapsed .sidebar__bottom {
+    display: none;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar__content {
+    flex: 0 0 auto;
+    min-height: auto;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar__nav {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .dashboard--sidebar-collapsed .sidebar__item,
+  .dashboard--sidebar-collapsed .sidebar__item--button,
+  .dashboard--sidebar-collapsed .sidebar__item--collapsed {
+    width: 52px;
+    min-width: 52px;
+    height: 52px;
+    min-height: 52px;
+    padding: 0;
+    justify-content: center;
+    scroll-snap-align: start;
+  }
+}
+
+/* Mobile workspace drawer and form safety */
+.sidebar-backdrop,
+.topbar__menu-button {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app-shell,
+  .dashboard {
+    display: block;
+    min-height: 100vh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 70;
+    width: min(340px, calc(100vw - 28px));
+    max-width: 340px;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 18px 14px;
+    border-right: 1px solid rgba(220, 231, 242, 0.92);
+    border-bottom: 0;
+    border-radius: 0 22px 22px 0;
+    overflow: hidden;
+    transform: translateX(calc(-100% - 16px));
+    transition: transform 0.24s ease, box-shadow 0.24s ease;
+    box-shadow: none;
+  }
+
+  .dashboard--mobile-sidebar-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 18px 0 60px rgba(25, 32, 46, 0.18);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: block;
+    border: 0;
+    background: rgba(20, 26, 38, 0.34);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .dashboard--mobile-sidebar-open .sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar__collapse-button {
+    display: none;
+  }
+
+  .sidebar__header {
+    flex-direction: row;
+    min-height: 48px;
+  }
+
+  .sidebar__brand {
+    justify-content: flex-start;
+  }
+
+  .sidebar__content {
+    min-height: 0;
+  }
+
+  .sidebar__nav {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+  }
+
+  .sidebar__item,
+  .sidebar__item--button {
+    width: 100%;
+    min-width: 0;
+    min-height: 56px;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .sidebar__item-copy {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .sidebar__item-copy strong,
+  .sidebar__item-copy small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar__item-copy strong {
+    white-space: nowrap;
+  }
+
+  .sidebar__item-copy small {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  .main,
+  .main-area {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    min-height: auto;
+    padding: 12px 14px;
+  }
+
+  .topbar__start {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .topbar__menu-button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(220, 231, 242, 0.94);
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--primary-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .topbar__search {
+    min-width: 0;
+    max-width: none;
+    min-height: 44px;
+    border-radius: 14px;
+    padding: 0 12px;
+  }
+
+  .topbar__actions {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .topbar__profile {
+    min-width: 0;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .topbar__profile-copy {
+    min-width: 0;
+  }
+
+  .topbar__profile-copy strong,
+  .topbar__profile-copy span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .content,
+  .page-container {
+    width: 100%;
+    min-width: 0;
+    padding: 16px 14px 24px;
+    overflow-x: hidden;
+  }
+
+  .dashboard-page,
+  .employee-workspace-page,
+  .workspace-page,
+  .employee-section,
+  .dashboard-panel,
+  .workspace-form,
+  .employee-form-grid,
+  .timesheet-api-form,
+  .correction-form {
+    min-width: 0;
+  }
+
+  .dashboard-panel {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .dashboard-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-table {
+    width: max-content;
+  }
+
+  .attendance-history__table {
+    min-width: 680px;
+  }
+
+  .timesheet-table {
+    min-width: 760px;
+  }
+
+  .timesheet-table--api {
+    min-width: 860px;
+  }
+
+  .dashboard-table__head,
+  .dashboard-table__row {
+    width: 100%;
+  }
+
+  .dashboard-table__head > *,
+  .dashboard-table__row > * {
+    min-width: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .dashboard-table__head span,
+  .dashboard-table__row span,
+  .dashboard-table__row strong {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .employee-section__header h1,
+  .workspace-page__hero h1 {
+    font-size: 1.65rem;
+    line-height: 1.15;
+  }
+
+  .employee-form-grid,
+  .workspace-form__split,
+  .timesheet-api-form__grid,
+  .correction-form__row {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-form-grid__full,
+  .timesheet-api-form__full,
+  .hr-form-full,
+  .hr-form-actions {
+    grid-column: auto;
+  }
+
+  .employee-form-grid input,
+  .employee-form-grid select,
+  .employee-form-grid textarea,
+  .workspace-form__control,
+  .workspace-form__input,
+  .timesheet-filter-bar select,
+  .timesheet-filter-bar input,
+  .timesheet-api-form select,
+  .timesheet-api-form input,
+  .timesheet-api-form textarea,
+  .correction-form input,
+  .correction-form textarea,
+  .hr-toolbar select,
+  .hr-report-filter select,
+  .hr-report-filter input,
+  .hr-form-grid input,
+  .hr-form-grid select,
+  .hr-form-grid textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
   }
 }

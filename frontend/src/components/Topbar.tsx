@@ -17,7 +17,7 @@ function Topbar() {
     <header className="topbar">
       <div className="topbar__search">
         <FiSearch />
-        <input type="text" placeholder="Tim kiem bang cong, don nghi, thong bao..." />
+        <input type="text" placeholder="Tìm kiếm bảng công, đơn nghỉ, thông báo..." />
       </div>
 
       <div className="topbar__actions">
@@ -26,11 +26,11 @@ function Topbar() {
         <div className="topbar__profile">
           <div className="topbar__avatar">{initials}</div>
           <div>
-            <strong>{session?.name || 'Guest User'}</strong>
+            <strong>{session?.name || 'Khách truy cập'}</strong>
             <span>
               {session?.role
-                ? `Role: ${session.role} | Provider: ${session.provider || 'password'}`
-                : 'Xin chao, chuc ban mot ngay lam viec hieu qua'}
+                ? `Vai trò: ${session.role} | Hình thức đăng nhập: ${session.provider || 'password'}`
+                : 'Xin chào, chúc bạn một ngày làm việc hiệu quả'}
             </span>
           </div>
         </div>

@@ -16,6 +16,7 @@ import {
 import type { Role } from '../types';
 import { getDashboardPathByRole } from '../utils/storage';
 import { useSocket } from '../contexts/SocketContext';
+import { formatNotificationContent } from '../utils/notificationText';
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -157,7 +158,7 @@ function NotificationDropdown({ userID = '', role = 'unknown' }: NotificationDro
       <button
         className="topbar__icon notification-dropdown__trigger"
         type="button"
-        aria-label="Thong bao"
+        aria-label="Thông báo"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={handleToggle}
@@ -169,15 +170,15 @@ function NotificationDropdown({ userID = '', role = 'unknown' }: NotificationDro
       </button>
 
       {isOpen ? (
-        <section className="notification-dropdown__menu" role="menu" aria-label="Thong bao">
+        <section className="notification-dropdown__menu" role="menu" aria-label="Thông báo">
           <div className="notification-dropdown__header">
-            <strong>Thong bao</strong>
-            <span>{unreadCount} chua doc</span>
+            <strong>Thông báo</strong>
+            <span>{unreadCount} chưa đọc</span>
           </div>
 
           <div className="notification-dropdown__list">
             {isLoading && notifications.length === 0 ? (
-              <div className="notification-dropdown__state">Dang tai thong bao...</div>
+              <div className="notification-dropdown__state">Đang tải thông báo...</div>
             ) : null}
 
             {!isLoading && error && notifications.length === 0 ? (
@@ -187,7 +188,7 @@ function NotificationDropdown({ userID = '', role = 'unknown' }: NotificationDro
             ) : null}
 
             {!isLoading && !error && notifications.length === 0 ? (
-              <div className="notification-dropdown__state">Chua co thong bao moi.</div>
+              <div className="notification-dropdown__state">Chưa có thông báo mới.</div>
             ) : null}
 
             {notifications.map((notification) => (
@@ -207,7 +208,9 @@ function NotificationDropdown({ userID = '', role = 'unknown' }: NotificationDro
                     {getRelatedLabel(notification)}
                     {!notification.isRead ? <span className="notification-dropdown__dot" /> : null}
                   </span>
-                  <span className="notification-dropdown__content">{notification.content}</span>
+                  <span className="notification-dropdown__content">
+                    {formatNotificationContent(notification.content)}
+                  </span>
                   <span className="notification-dropdown__meta">
                     {getSenderName(notification)}
                     <span aria-hidden="true">-</span>
@@ -301,25 +304,25 @@ function getRelatedLabel(notification: NotificationItem): string {
   const relatedType = normalizeRelatedType(notification.relatedType);
 
   if (relatedType === 'leave') {
-    return 'Nghi phep';
+    return 'Nghỉ phép';
   }
 
   if (relatedType === 'timesheet') {
-    return 'Bang cong';
+    return 'Bảng công';
   }
 
   if (relatedType === 'warning') {
-    return 'Canh bao';
+    return 'Cảnh báo';
   }
 
-  return 'Thong bao';
+  return 'Thông báo';
 }
 
 function getSenderName(notification: NotificationItem): string {
   return (
     notification.sender?.username ||
     notification.sender?.email ||
-    (notification.senderID ? 'Nguoi gui' : 'He thong')
+    (notification.senderID ? 'Người gửi' : 'Hệ thống')
   );
 }
 
@@ -342,23 +345,23 @@ function formatNotificationTime(value: string): string {
   const diffMinutes = Math.max(Math.floor(diffMs / 60000), 0);
 
   if (diffMinutes < 1) {
-    return 'Vua xong';
+    return 'Vừa xong';
   }
 
   if (diffMinutes < 60) {
-    return `${diffMinutes} phut truoc`;
+    return `${diffMinutes} phút trước`;
   }
 
   const diffHours = Math.floor(diffMinutes / 60);
 
   if (diffHours < 24) {
-    return `${diffHours} gio truoc`;
+    return `${diffHours} giờ trước`;
   }
 
   const diffDays = Math.floor(diffHours / 24);
 
   if (diffDays < 7) {
-    return `${diffDays} ngay truoc`;
+    return `${diffDays} ngày trước`;
   }
 
   return new Intl.DateTimeFormat('vi-VN', {
@@ -373,7 +376,7 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Khong the cap nhat thong bao.';
+  return 'Không thể cập nhật thông báo.';
 }
 
 export default NotificationDropdown;

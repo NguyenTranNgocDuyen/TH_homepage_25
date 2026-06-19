@@ -302,7 +302,7 @@
   }
 
   .attendance-history__table {
-    min-width: 0;
+    min-width: 680px;
   }
 }
 

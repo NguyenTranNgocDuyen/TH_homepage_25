@@ -37,6 +37,7 @@ export interface AuthSession {
 
 export interface Attendance {
   id: string;
+  monthlyTimesheetID?: string;
   userEmail: string;
   date: string;
   checkInTime: string | null;

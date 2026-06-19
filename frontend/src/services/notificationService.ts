@@ -58,7 +58,7 @@ export async function getMyNotifications(userID: string): Promise<NotificationIt
   } catch (error) {
     throw normalizeNotificationError(
       error,
-      'Khong the tai danh sach thong bao.',
+      'Không thể tải danh sách thông báo.',
       'NOTIFICATION_LIST_FAILED',
     );
   }
@@ -78,7 +78,7 @@ export async function getUnreadCount(userID: string): Promise<number> {
   } catch (error) {
     throw normalizeNotificationError(
       error,
-      'Khong the tai so thong bao chua doc.',
+      'Không thể tải số thông báo chưa đọc.',
       'NOTIFICATION_COUNT_FAILED',
     );
   }
@@ -104,7 +104,7 @@ export async function markAsRead(notificationID: string): Promise<NotificationIt
   } catch (error) {
     throw normalizeNotificationError(
       error,
-      'Khong the danh dau thong bao da doc.',
+      'Không thể đánh dấu thông báo đã đọc.',
       'NOTIFICATION_MARK_READ_FAILED',
     );
   }

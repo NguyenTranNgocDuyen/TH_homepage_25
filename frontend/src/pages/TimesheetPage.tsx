@@ -163,7 +163,14 @@ function ConnectedTimesheetPage() {
 
   const submitState = useMemo(() => {
     if (!timesheetData) {
-      return { allowed: false, reason: 'Dang tai bang cong...' };
+      return { allowed: false, reason: 'Đang tải bảng công...' };
+    }
+
+    if (periodType === 'week') {
+      return {
+        allowed: false,
+        reason: 'Tuan nay chi la che do xem. Vui long chon Thang nay de gui ky cong 17-16.',
+      };
     }
 
     const periodCorrections = timesheetData.corrections.filter(
@@ -173,7 +180,7 @@ function ConnectedTimesheetPage() {
     );
 
     return canSubmitTimesheet(timesheetData.rows, periodCorrections, timesheetData.summary);
-  }, [timesheetData]);
+  }, [periodType, timesheetData]);
 
   const handleOpenCorrection = (row = null) => {
     setSelectedRow(row || timesheetData?.rows[0] || null);
@@ -192,9 +199,14 @@ function ConnectedTimesheetPage() {
         return;
       }
 
+      if (!attendanceRow.monthlyTimesheetID) {
+        setFeedback('Ban ghi cham cong chua co ma monthly timesheet.');
+        return;
+      }
+
       await createCorrectionRequest({
         userID: session.userID || session.id,
-        monthlyTimesheetID: timesheetData.summary.id,
+        monthlyTimesheetID: attendanceRow.monthlyTimesheetID,
         userEmail: session.email,
         attendanceId: attendanceRow.id,
         date: formData.date,
@@ -217,6 +229,11 @@ function ConnectedTimesheetPage() {
   };
 
   const handleSubmitTimesheet = () => {
+    if (periodType === 'week') {
+      setFeedback('Tuan nay chi la che do xem. Vui long chon Thang nay de gui ky cong 17-16.');
+      return;
+    }
+
     if (!timesheetData) {
       return;
     }

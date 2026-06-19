@@ -59,12 +59,24 @@ export class LeaveApplicationService {
         };
       }
 
+      const overlappingLeave = await this.findOverlappingActiveLeave(
+        userID,
+        start,
+        end,
+      );
+      if (overlappingLeave) {
+        return {
+          statusCode: BADREQUEST_CODE,
+          message: `Khoảng thời gian này đã trùng với đơn nghỉ ${this.formatDateRange(overlappingLeave.startDate, overlappingLeave.endDate)} đang ${overlappingLeave.status === LeaveStatus.PENDING ? 'chờ duyệt' : 'đã được duyệt'}`,
+        };
+      }
+
       const duration = this.calculateBusinessDays(start, end);
 
       if (duration <= 0) {
         return {
           statusCode: BADREQUEST_CODE,
-          message: 'Leave duration must include at least one weekday',
+          message: 'Thời gian nghỉ phải có ít nhất một ngày làm việc',
         };
       }
 
@@ -123,7 +135,7 @@ export class LeaveApplicationService {
             await this.notificationService.createNotification(
               userID,
               department.managerID,
-              `New leave application submitted by ${user.username} from ${startDate} to ${endDate} (${duration} days).`,
+              `${user.username} đã gửi đơn nghỉ phép từ ${this.formatDateForNotification(start)} đến ${this.formatDateForNotification(end)} (${duration} ngày).`,
               NotificationRelatedType.LEAVE,
             );
 
@@ -352,8 +364,8 @@ export class LeaveApplicationService {
         // Send notification to employee
         const notificationMsg =
           newStatus === LeaveStatus.APPROVED
-            ? `Your leave application from ${application.startDate.toDateString()} to ${application.endDate.toDateString()} has been approved.`
-            : `Your leave application from ${application.startDate.toDateString()} to ${application.endDate.toDateString()} has been rejected. Reason: ${reasonReject}`;
+            ? `Đơn nghỉ phép từ ${this.formatDateForNotification(application.startDate)} đến ${this.formatDateForNotification(application.endDate)} của bạn đã được phê duyệt.`
+            : `Đơn nghỉ phép từ ${this.formatDateForNotification(application.startDate)} đến ${this.formatDateForNotification(application.endDate)} của bạn đã bị từ chối. Lý do: ${reasonReject}`;
 
         await this.notificationService.createNotification(
           reviewerID,
@@ -510,11 +522,47 @@ export class LeaveApplicationService {
     ).sort();
   }
 
+  private async findOverlappingActiveLeave(
+    userID: string,
+    start: Date,
+    end: Date,
+  ): Promise<{ startDate: Date; endDate: Date; status: LeaveStatus } | null> {
+    return this.prisma.leaveApplication.findFirst({
+      where: {
+        senderID: userID,
+        status: { in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
+        startDate: { lte: end },
+        endDate: { gte: start },
+      },
+      select: {
+        startDate: true,
+        endDate: true,
+        status: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  private formatDateRange(start: Date, end: Date): string {
+    const startText = this.toDateKey(start);
+    const endText = this.toDateKey(end);
+
+    return startText === endText ? startText : `${startText} - ${endText}`;
+  }
+
   private toDateKey(value: Date): string {
     const year = value.getFullYear();
     const month = String(value.getMonth() + 1).padStart(2, '0');
     const day = String(value.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  private formatDateForNotification(value: Date): string {
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(value);
   }
 }
