@@ -38,6 +38,14 @@ import GetAttendenceDto from './dto/getAttendence.dto';
 import CheckInDto from './dto/checkIn.dto';
 import CheckOutDto from './dto/checkOut.dto';
 import { Body } from '@nestjs/common';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 @Controller('attendance-module')
 export class AttendanceModuleController {
@@ -164,10 +172,10 @@ export class AttendanceModuleController {
   @Get('/AllEmployeeNotCheckOutOfToday')
   @RequirePermission('admin')
   async GetAllEmployeeDindNotCheckOutOfDay(): Promise<DefaultResponse> {
-    const now = new Date();
+    const todayStr = dayjs().tz(SERVER_TZ).format('YYYY-MM-DD');
     const { statusCode, message, data } =
       await this.attendanceModuleService.GetAllEmployeeDidNotCheckOutBefore(
-        now.toISOString().split('T')[0],
+        todayStr,
       );
     if (statusCode === OK_CODE) return { statusCode, message, data };
     if (statusCode == NOTFOUND_CODE) throw new NotFoundException(message);

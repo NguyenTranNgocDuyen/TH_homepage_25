@@ -32,6 +32,14 @@ import { EmailService } from 'src/common/email.service';
 import { ExcelHelper } from 'src/common/excel.helper';
 import { RequestUser } from 'src/common/types';
 import * as ExcelJS from 'exceljs';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 interface TimesheetReportFilters {
   fromDate?: string;
@@ -349,9 +357,8 @@ export class MonthlyTimeSheetService {
   }
 
   private formatDateTime(value: Date): string {
-    const date = new Date(value);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    const d = dayjs(value).tz(SERVER_TZ);
+    return `${d.year()}-${String(d.month() + 1).padStart(2, '0')}-${String(d.date()).padStart(2, '0')} ${String(d.hour()).padStart(2, '0')}:${String(d.minute()).padStart(2, '0')}:${String(d.second()).padStart(2, '0')}`;
   }
 
   private csvEscape(value: string): string {
@@ -564,9 +571,8 @@ export class MonthlyTimeSheetService {
 
   private formatTime(value?: Date | null): string {
     if (!value) return '';
-    const date = new Date(value);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const d = dayjs(value).tz(SERVER_TZ);
+    return `${String(d.hour()).padStart(2, '0')}:${String(d.minute()).padStart(2, '0')}`;
   }
 
   private calculateEntryHours(checkIn: Date, checkOut?: Date | null): number {
@@ -727,10 +733,10 @@ export class MonthlyTimeSheetService {
         if (monthGet.status === MonthlyTimesheetStatus.APPROVED)
           throw new BadRequestException('Approved monthly timesheet is locked');
 
-        const currentDate = new Date();
-        const currentDay = currentDate.getDate();
-        const currentMonth = currentDate.getMonth() + 1;
-        const currentYear = currentDate.getFullYear();
+        const nowLocal = dayjs().tz(SERVER_TZ);
+        const currentDay = nowLocal.date();
+        const currentMonth = nowLocal.month() + 1;
+        const currentYear = nowLocal.year();
 
         if (currentDay < 17 || currentDay > 23) {
           throw new BadRequestException(
