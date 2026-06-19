@@ -14,6 +14,14 @@ import {
 import { Prisma, LeaveStatus, NotificationRelatedType } from '@prisma/client';
 import { NotificationService } from 'src/notification/notification.service';
 import { EmailService } from 'src/common/email.service';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 @Injectable()
 export class LeaveApplicationService {
@@ -48,7 +56,7 @@ export class LeaveApplicationService {
         };
       }
 
-      const currentYear = new Date().getFullYear();
+      const currentYear = dayjs().tz(SERVER_TZ).year();
       if (
         start.getFullYear() > currentYear ||
         end.getFullYear() > currentYear
@@ -65,6 +73,36 @@ export class LeaveApplicationService {
         return {
           statusCode: BADREQUEST_CODE,
           message: 'Leave duration must include at least one weekday',
+        };
+      }
+
+      const existingLeaves = await this.prisma.leaveApplication.findMany({
+        where: {
+          senderID: userID,
+          status: { in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
+        },
+      });
+
+      const toLocalDateString = (date: Date): string => {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: SERVER_TZ,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        return formatter.format(date);
+      };
+
+      const hasOverlap = existingLeaves.some((leave) => {
+        const dbStart = toLocalDateString(leave.startDate);
+        const dbEnd = toLocalDateString(leave.endDate);
+        return dbStart <= endDate && dbEnd >= startDate;
+      });
+
+      if (hasOverlap) {
+        return {
+          statusCode: BADREQUEST_CODE,
+          message: 'Bạn đã có đơn xin nghỉ trùng khoảng thời gian này (đang chờ duyệt hoặc đã được duyệt)',
         };
       }
 
@@ -448,9 +486,8 @@ export class LeaveApplicationService {
   }
 
   private startOfToday(): Date {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    const d = dayjs().tz(SERVER_TZ);
+    return new Date(d.year(), d.month(), d.date(), 0, 0, 0, 0);
   }
 
   private calculateBusinessDays(start: Date, end: Date): number {

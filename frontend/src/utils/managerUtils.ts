@@ -154,6 +154,7 @@ export function cloneTimesheet(timesheet: any) {
   return {
     ...timesheet,
     warnings: [...(timesheet.warnings || [])],
+    records: timesheet.records ? [...timesheet.records] : undefined,
   };
 }
 

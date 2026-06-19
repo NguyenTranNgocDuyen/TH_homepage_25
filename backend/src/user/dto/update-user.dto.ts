@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
 } from 'class-validator';
 
 export default class updateUserDto {
@@ -38,6 +39,9 @@ export default class updateUserDto {
   })
   @IsString()
   @IsOptional()
+  @Matches(/^[0-9+-\s]*$/, {
+    message: 'Số điện thoại chỉ được chứa các chữ số, khoảng trắng hoặc ký tự + -',
+  })
   phone?: string | null;
 
   @ApiProperty({

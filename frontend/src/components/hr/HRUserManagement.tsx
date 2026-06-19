@@ -10,7 +10,7 @@ import {
   FiUpload,
   FiCopy,
 } from 'react-icons/fi';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, getCurrentMonthRange } from '../../utils/dateUtils';
 import {
   activateHrUser,
   createHrUser,
@@ -429,11 +429,26 @@ function EmployeeModal({
 
   if (modal.mode === 'detail' && employee) {
     const recentLeaves = leaveRequests
-      .filter((request) => request.employeeId === employee.id)
+      .filter((request) => (request.employeeId || request.senderID) === employee.id)
       .slice(0, 4);
     const recentTimesheets = timesheets
-      .filter((timesheet) => timesheet.employeeId === employee.id)
+      .filter((timesheet) => (timesheet.employeeId || timesheet.userID) === employee.id)
       .slice(0, 4);
+
+    const currentPeriod = getCurrentMonthRange();
+    const startKey = currentPeriod.startKey;
+    const endKey = currentPeriod.endKey;
+
+    const empTimesheetRows = timesheets.filter(
+      (ts) => (ts.employeeId || ts.userID) === employee.id && ts.workDate >= startKey && ts.workDate <= endKey
+    );
+
+    const calculatedMonthlyHours = empTimesheetRows.reduce(
+      (total, ts) => total + (Number(ts.totalHours) || 0),
+      0
+    );
+
+    const monthlyHoursDisplay = (Math.round(calculatedMonthlyHours * 100) / 100).toFixed(1);
 
     return (
       <ModalShell title={`Chi tiết nhân viên ${employee.employeeCode}`} onClose={onClose}>
@@ -444,7 +459,7 @@ function EmployeeModal({
           <InfoItem label="Vai trò" value={formatHrRole(employee.role)} />
           <InfoItem label="Trạng thái" value={formatHrStatus(employee.status)} />
           <InfoItem label="Số ngày phép còn lại" value={`${employee.leaveBalance} ngày`} />
-          <InfoItem label="Tổng giờ tháng này" value={`${employee.monthlyHours}h`} />
+          <InfoItem label="Tổng giờ tháng này" value={`${monthlyHoursDisplay}h`} />
         </div>
 
         <div className="hr-modal-section">

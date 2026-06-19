@@ -146,22 +146,54 @@ function ManagerDashboard() {
       }
     }
 
-    return {
-      month,
-      year,
-    };
+    return { month, year };
+  }, []);
+
+  // The currently-active cycle where new check-ins are recorded.
+  // Per business rule: if today >= 17, we're in the NEXT month's cycle.
+  const currentActivePeriod = useMemo(() => {
+    const now = new Date();
+    let month = now.getMonth() + 1;
+    let year = now.getFullYear();
+
+    if (now.getDate() >= 17) {
+      month += 1;
+      if (month > 12) {
+        month = 1;
+        year += 1;
+      }
+    }
+
+    return { month, year };
   }, []);
 
   const loadReviewTimesheets = async ({ showSuccess = false } = {}) => {
     setIsTimesheetLoading(true);
     try {
-      const result = await getManagerMonthlyTimesheetsForReview(
-        currentManager.departmentId || '',
-        reviewPeriod.month,
-        reviewPeriod.year,
-      );
-      setEmployees((current) => mergeEmployees(current, result.employees));
-      setTimesheets(result.timesheets.map(cloneTimesheet));
+      const deptId = currentManager.departmentId || '';
+
+      // Always load the review period. Also load the current active cycle when
+      // it differs so that employees with in-progress timesheets (e.g. new
+      // hires who checked in today) still appear in the team panel.
+      const isSamePeriod =
+        reviewPeriod.month === currentActivePeriod.month &&
+        reviewPeriod.year === currentActivePeriod.year;
+
+      const calls = [
+        getManagerMonthlyTimesheetsForReview(deptId, reviewPeriod.month, reviewPeriod.year),
+        ...(isSamePeriod
+          ? []
+          : [getManagerMonthlyTimesheetsForReview(deptId, currentActivePeriod.month, currentActivePeriod.year)]),
+      ];
+
+      const results = await Promise.all(calls);
+
+      const mergedEmployees = results.flatMap((r) => r.employees);
+      const mergedTimesheets = results.flatMap((r) => r.timesheets.map(cloneTimesheet));
+
+      setEmployees((current) => mergeEmployees(current, mergedEmployees));
+      setTimesheets(mergedTimesheets);
+
       if (showSuccess) {
         setFeedback({ type: 'success', message: 'Da tai danh sach bang cong can duyet tu API.' });
       }

@@ -50,6 +50,12 @@ function ProfileSection({ profile, onSaveProfile, onUploadAvatar, personalStats 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const phoneRegex = /^[0-9+-\s]*$/;
+    if (form.phone && !phoneRegex.test(form.phone)) {
+      setFeedbackType('danger');
+      setFeedback('Số điện thoại không hợp lệ (chỉ được chứa các chữ số, khoảng trắng hoặc ký tự + -).');
+      return;
+    }
     try {
       await onSaveProfile(form);
       setFeedbackType('success');

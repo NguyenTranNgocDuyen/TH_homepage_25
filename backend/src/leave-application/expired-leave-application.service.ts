@@ -3,6 +3,14 @@ import { Cron } from '@nestjs/schedule';
 import { LeaveStatus, NotificationRelatedType } from '@prisma/client';
 import { NotificationService } from 'src/notification/notification.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 @Injectable()
 export class ExpiredLeaveApplicationService implements OnModuleInit {
@@ -76,21 +84,16 @@ export class ExpiredLeaveApplicationService implements OnModuleInit {
   }
 
   private endOfToday(): Date {
-    const date = new Date();
-    date.setHours(23, 59, 59, 999);
-    return date;
+    const d = dayjs().tz(SERVER_TZ).endOf('day');
+    return d.toDate();
   }
 
   private endOfYesterday(): Date {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(23, 59, 59, 999);
-    return date;
+    const d = dayjs().tz(SERVER_TZ).subtract(1, 'day').endOf('day');
+    return d.toDate();
   }
 
   private formatDateKey(date: Date): string {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${date.getFullYear()}-${month}-${day}`;
+    return dayjs(date).tz(SERVER_TZ).format('YYYY-MM-DD');
   }
 }

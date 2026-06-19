@@ -265,36 +265,85 @@ export class AuthService {
     const userResult = await this.userService.getUserByEmail(email);
     const { statusCode, data } = userResult;
 
-    if (statusCode !== OK_CODE || !data) {
-      return {
-        statusCode: UNAUTHORIZED_CODE,
-        message: 'User not found. Please contact administrator.',
+    let dbUser = data;
+
+    if (statusCode !== OK_CODE || !dbUser) {
+      // Tự động tạo user mới
+      const username = email.split('@')[0] || 'SSO User';
+      const randomPassword = randomBytes(20).toString('hex');
+      const hashedPassword = await this.bcryptHashedservice.hash(randomPassword);
+      
+      let employeeRole = await this.prismaService.role.findFirst({
+        where: { nameRole: 'employee' }
+      });
+      if (!employeeRole) {
+        employeeRole = await this.prismaService.role.create({
+          data: { nameRole: 'employee' }
+        });
+      }
+      const createdUser = await this.prismaService.user.create({
+        data: {
+          email,
+          username,
+          hashedPassword,
+          roleId: employeeRole.roleID,
+          isActive: true,
+          remainDaysofLeave: 12,
+          totalDaysofLeave: 12,
+          salaryCoefficient: 1.0,
+        },
+        include: { role: true, department: true }
+      });
+
+      dbUser = {
+        userID: createdUser.userID,
+        email: createdUser.email,
+        username: createdUser.username,
+        hashedPassword: createdUser.hashedPassword,
+        isActive: createdUser.isActive,
+        roleId: createdUser.roleId,
+        departmentID: createdUser.departmentID,
+        remainDaysofLeave: createdUser.remainDaysofLeave,
+        totalDaysofLeave: createdUser.totalDaysofLeave,
+        salaryCoefficient: createdUser.salaryCoefficient,
+        role: createdUser.role ? {
+          roleID: createdUser.role.roleID,
+          nameRole: createdUser.role.nameRole,
+        } : undefined,
+        department: null,
       };
     }
 
-    if (!data.isActive) {
+    if (!dbUser) {
+      return {
+        statusCode: UNAUTHORIZED_CODE,
+        message: 'Không thể tạo hoặc tìm thấy tài khoản người dùng',
+      };
+    }
+
+    if (!dbUser.isActive) {
       return {
         statusCode: UNAUTHORIZED_CODE,
         message: 'User account is inactive',
       };
     }
 
-    const roleName = data.role?.nameRole;
+    const roleName = dbUser.role?.nameRole;
     const accessToken = this.genAccessToken(
-      data.username,
-      data.userID,
-      data.email,
-      data.roleId,
-      data.departmentID,
+      dbUser.username,
+      dbUser.userID,
+      dbUser.email,
+      dbUser.roleId,
+      dbUser.departmentID,
       roleName,
     );
     const refreshToken = this.genRefreshToken(
-      data.userID,
-      data.username || '',
-      data.email,
+      dbUser.userID,
+      dbUser.username || '',
+      dbUser.email,
     );
 
-    await this.userService.updateUser(data.userID, { refreshToken });
+    await this.userService.updateUser(dbUser.userID, { refreshToken });
 
     return {
       statusCode: CREATED_RESPONE,
@@ -302,7 +351,7 @@ export class AuthService {
       data: {
         accessToken,
         refreshToken,
-        user: this.toAuthUser(data),
+        user: this.toAuthUser(dbUser),
       },
     };
   }

@@ -38,6 +38,7 @@ import {
   timesheets as mockTimesheets,
 } from '../data/mockData';
 import { fetchHrLeaveTypes, fetchHrUsers, fetchDepartments, fetchHrLeaveRequests } from '../services/hrService';
+import { getTimesheetReport } from '../services/timesheetService';
 import { getAuthSession, getDashboardPathByRole, updateAuthSession } from '../utils/storage';
 import './EmployeeDashboard.css';
 import '../styles/timesheet.css';
@@ -81,6 +82,7 @@ function HRDashboard() {
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [timesheets, setTimesheets] = useState<any[]>([]);
 
   useEffect(() => {
     if (!session?.email) return;
@@ -156,10 +158,11 @@ function HRDashboard() {
     let isMounted = true;
 
     async function loadHrData() {
-      const [departmentsResult, leaveTypesResult, leaveRequestsResult] = await Promise.allSettled([
+      const [departmentsResult, leaveTypesResult, leaveRequestsResult, timesheetsResult] = await Promise.allSettled([
         fetchDepartments(),
         fetchHrLeaveTypes(),
         fetchHrLeaveRequests(),
+        getTimesheetReport({ fromDate: '2026-01-01', toDate: '2026-12-31' }),
       ]);
 
       const loadedDepartments: HrDepartment[] =
@@ -212,11 +215,23 @@ function HRDashboard() {
         setLeaveRequests(leaveRequestsResult.value);
       }
 
+      if (timesheetsResult.status === 'fulfilled' && timesheetsResult.value) {
+        setTimesheets(timesheetsResult.value.rows || []);
+      } else if (timesheetsResult.status === 'rejected' || !timesheetsResult.value) {
+        if (API_CONFIG.ENABLE_MOCK_FALLBACK) {
+          console.warn('[HRDashboard] Timesheets API failed, using mock data.');
+          setTimesheets(mockTimesheets);
+        } else {
+          setTimesheets([]);
+        }
+      }
+
       const anyApiFailed =
         !usersResult ||
         leaveTypesResult.status === 'rejected' ||
         departmentsResult.status === 'rejected' ||
-        leaveRequestsResult.status === 'rejected';
+        leaveRequestsResult.status === 'rejected' ||
+        timesheetsResult.status === 'rejected';
 
       if (anyApiFailed) {
         if (API_CONFIG.ENABLE_MOCK_FALLBACK) {
@@ -252,7 +267,7 @@ function HRDashboard() {
     departments,
     leaveTypes,
     leaveRequests,
-    timesheets: API_CONFIG.ENABLE_MOCK_FALLBACK ? mockTimesheets : [],
+    timesheets: timesheets,
     payrollReports: API_CONFIG.ENABLE_MOCK_FALLBACK ? mockPayrollReports : [],
     feedback,
     onFeedback: showFeedback,

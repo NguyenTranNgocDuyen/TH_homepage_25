@@ -13,6 +13,7 @@ import {
   getMonthlyAttendance,
   getTodayAttendance,
   toggleMockIp,
+  getAttendancePeriod,
 } from '../services/attendanceService';
 import { createCorrectionRequest } from '../services/correctionService';
 import { createLeaveRequest, getLeaveBalance, getLeaveTypes, getMyLeaveRequests } from '../services/leaveService';
@@ -119,7 +120,8 @@ function EmployeeWorkspaceDashboard() {
 
     try {
       const now = new Date();
-      const records = await getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
+      const { month, year } = getAttendancePeriod(now);
+      const records = await getMonthlyAttendance(userID, month, year);
       const todayRecord = getTodayAttendance(userKey);
       const recentHistory = getAttendanceHistory(userKey, 7);
       const missingRecords = records.filter((record) => record.status === 'Missing Out');
@@ -150,8 +152,7 @@ function EmployeeWorkspaceDashboard() {
 
     const anchorDateObj = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
     const periodConfig = getPeriodConfig(periodType, anchorDateObj);
-    const month = periodConfig.startDate.getMonth() + 1;
-    const year = periodConfig.startDate.getFullYear();
+    const { month, year } = getAttendancePeriod(periodConfig.startDate);
     const date = getDateKey(periodConfig.startDate);
 
     try {
@@ -502,9 +503,11 @@ function EmployeeWorkspaceDashboard() {
         throw new Error('Không tìm thấy bản ghi cần chỉnh sửa.');
       }
 
+      const targetMonthlyTimesheetID = attendanceRow.monthlyTimesheetID || timesheetData.summary.id;
+
       await createCorrectionRequest({
         userID: session.userID || session.id,
-        monthlyTimesheetID: timesheetData.summary.id,
+        monthlyTimesheetID: targetMonthlyTimesheetID,
         userEmail: session.email,
         attendanceId: attendanceRow.id,
         date: formData.date,

@@ -7,6 +7,14 @@ import { TimesheetStatus } from '@prisma/client';
 import { WarningService } from 'src/warning/warning.service';
 import { OK_CODE, CREATED_RESPONE } from 'src/common/code';
 import ResponseDto, { DefaultResponse } from 'src/common/response.dto';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const SERVER_TZ = process.env.TZ || 'UTC';
 
 interface MissedCheckoutEmployee {
   userID: string;
@@ -107,8 +115,6 @@ export class MissedCheckoutTask {
   }
 
   private formatDateKey(date: Date): string {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${date.getFullYear()}-${month}-${day}`;
+    return dayjs(date).tz(SERVER_TZ).format('YYYY-MM-DD');
   }
 }

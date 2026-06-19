@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsUUID,
   IsNumber,
+  Matches,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -49,6 +50,9 @@ export class CreateUserDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
+  @Matches(/^[0-9+-\s]*$/, {
+    message: 'Số điện thoại chỉ được chứa các chữ số, khoảng trắng hoặc ký tự + -',
+  })
   phone?: string;
 
   @ApiProperty({ required: false })

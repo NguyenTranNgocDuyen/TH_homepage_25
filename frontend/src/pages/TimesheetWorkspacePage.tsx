@@ -17,22 +17,25 @@ import { getAuthSession, getDashboardPathByRole } from '../utils/storage';
 import './EmployeeDashboard.css';
 import './WorkspacePages.css';
 import '../styles/timesheet.css';
+import { getAttendancePeriod } from '../services/attendanceService';
 
 function getMonthYear(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     const now = new Date();
+    const { month, year } = getAttendancePeriod(now);
     return {
-      month: now.getMonth() + 1,
-      year: now.getFullYear(),
+      month,
+      year,
       date: now,
     };
   }
 
+  const { month, year } = getAttendancePeriod(date);
   return {
-    month: date.getMonth() + 1,
-    year: date.getFullYear(),
+    month,
+    year,
     date,
   };
 }
@@ -76,8 +79,7 @@ function TimesheetWorkspacePage() {
 
     const anchorDateObj = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
     const periodConfig = getPeriodConfig(periodType, anchorDateObj);
-    const month = periodConfig.startDate.getMonth() + 1;
-    const year = periodConfig.startDate.getFullYear();
+    const { month, year } = getAttendancePeriod(periodConfig.startDate);
     const date = getDateKey(periodConfig.startDate);
 
     setIsLoading(true);
@@ -146,9 +148,11 @@ function TimesheetWorkspacePage() {
         throw new Error('Không tìm thấy bản ghi chấm công để tạo yêu cầu.');
       }
 
+      const targetMonthlyTimesheetID = attendanceRow.monthlyTimesheetID || timesheetData.summary.id;
+
       await createCorrectionRequest({
         userID: session.userID || session.id,
-        monthlyTimesheetID: timesheetData.summary.id,
+        monthlyTimesheetID: targetMonthlyTimesheetID,
         userEmail: session.email,
         attendanceId: attendanceRow.id,
         date: formData.date,

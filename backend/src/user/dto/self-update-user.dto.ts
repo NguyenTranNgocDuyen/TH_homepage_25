@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDate, IsOptional, IsString, MaxLength, Matches } from 'class-validator';
 
 export class SelfUpdateUserDto {
   @ApiPropertyOptional({ description: 'Avatar image URL' })
@@ -13,6 +13,9 @@ export class SelfUpdateUserDto {
   @IsOptional()
   @IsString()
   @MaxLength(50)
+  @Matches(/^[0-9+-\s]*$/, {
+    message: 'Số điện thoại chỉ được chứa các chữ số, khoảng trắng hoặc ký tự + -',
+  })
   phone?: string | null;
 
   @ApiPropertyOptional({ description: 'Personal address' })
